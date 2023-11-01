@@ -35,6 +35,7 @@ class Dashboard extends Component {
     // Elimina la cookie y establece loggedOut en true
     Cookies.remove('token');
     this.setState({ user: null, loggedOut: true });
+    window.location.reload();
   }
 
   render() {
@@ -58,7 +59,7 @@ class Dashboard extends Component {
 
     return (
       <>
-        <Navbar nombre={<p>¡Bienvenido, {user.nombre} {user.apellido}!</p>} />
+        <Navbar nombre={<p>¡Bienvenido/a, {user.nombre} {user.apellido}!</p>} />
         <div className="text-center">
           <p className="text-xl font-semibold mb-2">¡Bienvenido, {user.nombre} {user.apellido}!</p>
           <p className="mb-2">{user.rut}</p>

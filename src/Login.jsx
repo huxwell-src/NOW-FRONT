@@ -24,6 +24,8 @@ class Login extends Component {
       Cookies.set('token', token);
     }
     this.setState({ token, user, loggedIn: true });
+    window.location.reload();
+    
   }
 
   handleLogout = () => {

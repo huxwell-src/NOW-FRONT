@@ -1,8 +1,9 @@
 import { Component } from 'react';
-import axios from 'axios';
+import { getUserData } from './api/userService';
 import { Navigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
-import Navbar from './components/Navbar';
+import Navigation from './components/Navigation';
+
 
 class Dashboard extends Component {
   constructor(props) {
@@ -18,26 +19,13 @@ class Dashboard extends Component {
 
     if (token) {
       try {
-        const response = await axios.get('http://127.0.0.1:8000/api/user', {
-          headers: {
-            Authorization: `Token ${token}`,
-          },
-        });
-
-        this.setState({ user: response.data.user });
+        const userData = await getUserData(token);
+        this.setState({ user: userData });
       } catch (error) {
         console.error('Error al obtener datos del usuario:', error);
       }
     }
   }
-
-  handleLogout = () => {
-    // Elimina la cookie y establece loggedOut en true
-    Cookies.remove('token');
-    this.setState({ user: null, loggedOut: true });
-    window.location.reload();
-  }
-
   render() {
     const { user, loggedOut } = this.state;
 
@@ -59,7 +47,7 @@ class Dashboard extends Component {
 
     return (
       <>
-        <Navbar nombre={<p>¡Bienvenido/a, {user.nombre} {user.apellido}!</p>} />
+        <Navigation nombre={<p>¡Bienvenido/a, {user.nombre} {user.apellido}!</p>} />
         <div className="text-center">
           <p className="text-xl font-semibold mb-2">¡Bienvenido, {user.nombre} {user.apellido}!</p>
           <p className="mb-2">{user.rut}</p>
@@ -67,12 +55,6 @@ class Dashboard extends Component {
           <p className="mb-2">{user.rol}</p>
           <p className="mb-2">{user.carrera}</p>
           <p className="mb-2">{user.curso}</p>
-          <button
-            onClick={this.handleLogout}
-            className="bg-red-500 text-white px-4 py-2 rounded-md mt-4"
-          >
-            Cerrar Sesión
-          </button>
         </div>
       </>
     );

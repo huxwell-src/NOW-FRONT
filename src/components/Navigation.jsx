@@ -1,13 +1,12 @@
-import React, { Component } from 'react';
+import { Component } from 'react';
 import { Sidebar } from 'primereact/sidebar';
-import { Button } from 'primereact/button';
 import Cookies from 'js-cookie';
 import { Link } from 'react-router-dom';
 import axios from 'axios'; // Asegúrate de importar axios
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSignOutAlt, faGraduationCap, faChalkboardUser, faHouse, faToolbox } from '@fortawesome/free-solid-svg-icons'; // Cambié el nombre del icono
 
-class Navbar extends Component {
+class Navigation extends Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -44,10 +43,10 @@ class Navbar extends Component {
 
     render() {
         const menuData = [
-            { label: 'Inicio', url: '#', icon: faHouse },
-            { label: 'Alumnos', url: '#', icon: faGraduationCap },
+            { label: 'Inicio', url: '/dashboard', icon: faHouse },
+            { label: 'Alumnos', url: '/Alumnos', icon: faGraduationCap },
             { label: 'Profesores', url: '#', icon: faChalkboardUser },
-            { label: 'Productos', url: '#', icon: faToolbox},
+            { label: 'Productos', url: '#', icon: faToolbox },
         ];
 
         const header = (
@@ -74,7 +73,12 @@ class Navbar extends Component {
                                 <span href="#" className="text-3xl font-bold text-white">NOW</span>
                             </div>
                             <ul className="flex space-x-4">
-                                <li><a href="#" className="text-white hover:underline">{this.state.user ? this.state.user.nombre : 'Invitado'}</a></li>
+                                <li>
+                                    <span className="text-white">
+                                        {this.state.user ? `!Bienvenido ${this.state.user.nombre} ${this.state.user.apellido}!` : 'Invitado'}
+                                    </span>
+                                </li>
+
                             </ul>
                         </div>
                     </div>
@@ -84,8 +88,8 @@ class Navbar extends Component {
                         <aside className="text-gray-950 h-full flex flex-col justify-between">
                             <ul className="p-2  ">
                                 {menuData.map((item, index) => (
-                                    <li key={index} className='hover:bg-sky-500/10 rounded-lg group duration-500' >
-                                        
+                                    <li key={index} className='hover:bg-sky-500/10 rounded-xl group duration-200' >
+
                                         <Link
                                             to={item.url}
                                             className="block rounded-xl p-2 text-gray-500 group-hover:font-bold group-hover:text-sky-500 "
@@ -95,12 +99,12 @@ class Navbar extends Component {
                                         </Link>
                                     </li>
                                 ))}
-                                
+
                             </ul>
                             <div>
-                                <button className="w-full flex rounded-xl px-4 py-2 text-gray-950 duration-200 hover:bg-gray-50 hover:text-sky-900" onClick={this.handleLogout}>
-                                    <FontAwesomeIcon className="h-6 mr-3 text-sky-700" icon={faSignOutAlt} />
-                                    Logout
+                                <button className="w-full flex rounded-xl px-4 py-2 hover:bg-sky-500/10 group duration-200" onClick={this.handleLogout}>
+                                    <FontAwesomeIcon className="h-6 mr-3 w-12 text-gray-500 group-hover:text-sky-500 duration-200" icon={faSignOutAlt} />
+                                    <span className='text-gray-500 group-hover:font-bold group-hover:text-sky-500'> Logout </span>
                                 </button>
                             </div>
                         </aside>
@@ -111,4 +115,4 @@ class Navbar extends Component {
     }
 }
 
-export default Navbar;
+export default Navigation ;

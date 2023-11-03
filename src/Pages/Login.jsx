@@ -113,7 +113,7 @@ class Login extends Component {
                   <div className="mt-2">
                     <input type="email" required
                       onChange={(e) => this.setState({ email: e.target.value })}
-                      className="w-full appearance-none bg-gray-50 border rounded-md py-2 focus:outline-none focus:ring focus:border-sky-500 " />
+                      className="w-full appearance-none bg-gray-50 border rounded-md py-2 md:w-96 focus:outline-none focus:ring focus:border-sky-500 " />
                   </div>
                 </div>
 
@@ -122,7 +122,7 @@ class Login extends Component {
                   <div className="mt-2">
                     <input type="password" required
                       onChange={(e) => this.setState({ password: e.target.value })}
-                      className="appearance-none bg-gray-50 border rounded-md py-2 w-96 focus:outline-none focus:ring focus:border-sky-500 px-10 " />
+                      className="appearance-none bg-gray-50 border rounded-md py-2 w-full md:w-96 focus:outline-none focus:ring focus:border-sky-500 px-2 " />
                   </div>
                 </div>
 

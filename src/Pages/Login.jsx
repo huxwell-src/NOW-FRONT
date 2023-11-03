@@ -70,7 +70,7 @@ class Login extends Component {
     }
     return (
 
-      <div className="min-h-screen flex items-center justify-center sm:bg-[#0ea5e9]/80 duration-200">
+      <div className="min-h-[100dvh] flex items-center justify-center sm:bg-[#0ea5e9]/80 duration-200">
         <div className="bg-white  p-6 rounded-xl sm:shadow-lg w-screen sm:w-auto">
           <div className="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
             <div className="sm:mx-auto sm:w-full sm:max-w-sm">

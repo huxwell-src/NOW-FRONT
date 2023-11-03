@@ -1,8 +1,7 @@
-import Login from './Login'
-import Dashboard from './Dashboard'
-import TableAlumnos from './Pages/TableAlumnos';
+import Login from './Pages/Login'
+import Dashboard from './Pages/Dashboard'
+import TableAlumnos from './Pages/CrudTables';
 import Cookies from 'js-cookie';
-import Navigation from './components/Navigation';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 
 const App = () => {

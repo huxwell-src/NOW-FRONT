@@ -1,6 +1,9 @@
 import React, { Component } from 'react';
 import axios from 'axios';
 import Cookies from 'js-cookie';
+import { DataTable } from 'primereact/datatable';
+import { Column } from 'primereact/column';
+import { InputText } from 'primereact/inputtext';
 
 class UserCrudTable extends Component {
   state = {
@@ -45,40 +48,50 @@ class UserCrudTable extends Component {
       });
   }
 
-  render() {
-    return (
-      <div>
-        <h1 className="text-2xl font-bold mb-4">List of Users</h1>
-        <table className="w-full border-collapse border">
-          <thead>
-            <tr className="bg-gray-200">
-              <th className="p-2 border">ID</th>
-              <th className="p-2 border">Name</th>
-              <th className="p-2 border">Email</th>
-              <th className="p-2 border">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {this.state.users.map((user) => (
-              <tr key={user.rut} className="bg-white">
-                <td className="p-2 border">{user.rut}</td>
-                <td className="p-2 border">{user.email}</td>
-                <td className="p-2 border">{user.rol}</td>
-                <td className="p-2 border">
-                  <button
-                    onClick={() => this.handleDeleteUser(user.id)}
-                    className="bg-red-500 text-white px-2 py-1 rounded-md"
-                  >
-                    Delete
-                  </button>
-                  {/* Agregar botones para editar y otras acciones */}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+  handleGlobalFilter = (event) => {
+    this.setState({ globalFilter: event.target.value }); // Manejar el cambio en la cadena de búsqueda global
+  }
 
+  handleClearGlobalFilter = () => {
+    this.setState({ globalFilter: '' });
+  }
+
+  render() {
+
+    const header = (
+      <div className="flex flex-wrap gap-2 align-items-center justify-between">
+        <h4 className=" text-2xl text-gray-900 font-bold ">Gestion de {this.props.title}</h4>
+        <span className="p-input-icon-left flex justify-between">
+          <i className="pi pi-search" />
+          <InputText
+            type="search"
+            className="appearance-none bg-gray-50 border rounded-md py-2 w-full focus:outline-none focus:ring focus:border-sky-500 px-10 "
+            value={this.state.globalFilter} // Bind el valor de la cadena de búsqueda global al estado
+            onInput={this.handleGlobalFilter} // Maneja el cambio en la cadena de búsqueda global
+            placeholder="Buscar..."
+          />
+        </span>
+      </div>
+    )
+
+    const actions = (
+      <button
+        onClick={() => this.handleDeleteUser(user.id)}
+        className="bg-red-500 text-white px-2 py-1 rounded-md"
+      >
+        Delete
+      </button>
+    );
+
+    return (
+      <>
+        <DataTable header={header} removableSort value={this.state.users} tableStyle={{ minWidth: '50rem' }} paginator rows={25} rowsPerPageOptions={[25, 50, 100, 200]}>
+          <Column sortable field="rut" header="Rut"></Column>
+          <Column sortable field="nombre" header="Nombre"></Column>
+          <Column sortable field="email" header="Email"></Column>
+          <Column body={actions}></Column>
+        </DataTable>
+      </>
     );
   }
 }

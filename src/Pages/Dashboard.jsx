@@ -1,8 +1,8 @@
 import { Component } from 'react';
-import { getUserData } from './api/userService';
+import { getUserData } from '../api/userService';
 import { Navigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
-import Navigation from './components/Navigation';
+import Navigation from '../components/Navigation';
 
 
 class Dashboard extends Component {

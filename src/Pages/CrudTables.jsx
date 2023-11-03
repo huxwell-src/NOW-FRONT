@@ -7,8 +7,7 @@ class TableAlumnos extends Component {
         return (
             <>
                 <Navigation/>
-                <UserCrudTable ></UserCrudTable>
-                TableAlumnos
+                <UserCrudTable title="Usuarios"  />
             </>
         )
     }

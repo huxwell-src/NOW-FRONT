@@ -1,138 +1,142 @@
-import { Component } from 'react';
-import axios from 'axios';
-import Cookies from 'js-cookie';
+import React, { Component } from "react";
+import axios from "axios";
+import Cookies from "js-cookie";
 import { Navigate } from "react-router-dom";
+import { InputText } from "primereact/inputtext";
+import { Button } from "primereact/button";
 
 class Login extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      email: '',
-      password: '',
+      email: "",
+      password: "",
       rememberMe: true,
-      token: Cookies.get('token') || '',
+      token: Cookies.get("token") || "",
       user: null,
-      errorMessage: '',
-      loggedIn: false, // Add a state variable to track login status.
+      errorMessage: "",
+      loggedIn: false,
     };
   }
 
-
-
   async handleLoginSuccess(token, user) {
     if (this.state.rememberMe) {
-      Cookies.set('token', token, { expires: 365 });
+      Cookies.set("token", token, { expires: 365 });
     } else {
-      Cookies.set('token', token);
+      Cookies.set("token", token);
     }
     this.setState({ token, user, loggedIn: true });
     window.location.reload();
-
   }
 
   handleLogout = () => {
-    Cookies.remove('token');
-    this.setState({ token: '', user: null });
-  }
+    Cookies.remove("token");
+    this.setState({ token: "", user: null });
+  };
 
   handleLogin = async (e) => {
     e.preventDefault();
-
+  
+    const loginData = {
+      email: this.state.email,
+      password: this.state.password,
+    };
+  
     try {
-      const response = await axios.post('http://127.0.0.1:8000/api/login', {
-        email: this.state.email,
-        password: this.state.password,
-      });
-
+      const response = await axios.post(
+        "http://127.0.0.1:8000/api/login",
+        loginData
+      );
+  
       if (response.data.token) {
         const token = response.data.token;
-        const userResponse = await axios.get('http://127.0.0.1:8000/api/user', {
+  
+        const userResponse = await axios.get("http://127.0.0.1:8000/api/user", {
           headers: {
             Authorization: `Token ${token}`,
           },
         });
-
+  
         this.handleLoginSuccess(token, userResponse.data.user);
       }
     } catch (error) {
       if (error.response && error.response.status === 400) {
-        this.setState({ errorMessage: 'Correo electrónico o contraseña incorrectos.' });
+        this.setState({
+          errorMessage: "Correo electrónico o contraseña incorrectos.",
+        });
       } else {
-        console.error('Error de inicio de sesión:', error);
+        console.error("Error de inicio de sesión:", error);
       }
     }
   };
+  
 
   render() {
     if (this.state.loggedIn) {
-      // Redirect to another component after successful login.
       return <Navigate to="/dashboard" />;
     }
     return (
-
       <div className="min-h-[100dvh] flex items-center justify-center sm:bg-[#0ea5e9]/80 duration-200">
-        <div className="bg-white  p-6 rounded-xl sm:shadow-lg w-screen sm:w-auto">
+        <div className="bg-white p-6 rounded-xl sm:shadow-lg w-screen sm:w-auto">
           <div className="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
             <div className="sm:mx-auto sm:w-full sm:max-w-sm">
-              <img className="mx-auto h-24 w-auto" src="https://i.ibb.co/j3dmr5L/logo-white.jpg" alt="Your Company" />
-              <h2 className="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">Iniciar Sesion</h2>
+              <img
+                className="mx-auto h-24 w-auto"
+                src="https://i.ibb.co/j3dmr5L/logo-white.jpg"
+                alt="Your Company"
+              />
+              <h2 className="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
+                Iniciar Sesion
+              </h2>
             </div>
-            {/* 
 
-              {
-                "rut": "987654321",
-                "nombre": "Juan",
-                "apellido": "Pérez",
-                "email": "juan.perez@email.com",
-                "password": "claveSegura456",
-                "rol": "Profesor
-              }
-
-              {
-                "rut": "555555555",
-                "nombre": "María",
-                "apellido": "Gómez",
-                "email": "maria.gomez@email.com",
-                "password": "miPassword123",
-                "rol": "Administrador"
-              }
-
-              */}
-
-
-            <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm ">
-
+            <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
               {this.state.errorMessage && (
-                <p className="text-red-500 font-medium text-sm mb-4">{this.state.errorMessage}</p>
+                <p className="text-red-500 font-medium text-sm mb-4">
+                  {this.state.errorMessage}
+                </p>
               )}
 
               <form className="space-y-6" onSubmit={this.handleLogin}>
-
                 <div>
-                  <label className="block text-sm font-medium leading-6 text-gray-900">Email</label>
+                  <label className="block text-sm font-medium leading-6 text-gray-900">
+                    Email
+                  </label>
                   <div className="mt-2">
-                    <input type="email" required
+                    <InputText
+                      type="email"
+                      required
                       onChange={(e) => this.setState({ email: e.target.value })}
-                      className="w-full appearance-none bg-gray-50 border rounded-md py-2 md:w-96 focus:outline-none focus:ring focus:border-sky-500 " />
+                      className="input"
+                    />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium leading-6 text-gray-900">Constraseña</label>
+                  <label className="block text-sm font-medium leading-6 text-gray-900">
+                    Contraseña
+                  </label>
                   <div className="mt-2">
-                    <input type="password" required
-                      onChange={(e) => this.setState({ password: e.target.value })}
-                      className="appearance-none bg-gray-50 border rounded-md py-2 w-full md:w-96 focus:outline-none focus:ring focus:border-sky-500 px-2 " />
+                    <InputText
+                      type="password"
+                      onChange={(e) =>
+                        this.setState({ password: e.target.value })
+                      }
+                      className="input"
+                    />
                   </div>
                 </div>
 
-
-                <button
-                  type="submit"
-                  className="bg-[#0ea5e9] text-white px-4 py-2 hover-bg-blue-600 focus:outline-none rounded-full hover:scale-105 active:scale-100 hover:drop-shadow-md active:drop-shadow-none drop-shadow-sm duration-100"
-                >
-                  Ingresar
-                </button>
+                <div className="w-full flex justify-end">
+                  <Button
+                    type="submit"
+                    label="Ingresar"
+                    rounded
+                    raised
+                    severity="info"
+                    className="bg-sky-500 border-0"
+                  />
+                </div>
               </form>
             </div>
           </div>

@@ -19,21 +19,22 @@ class ProductTable extends Component {
       cart: [],
       products: [],
       estado: "En Aprobacion",
-      badgeValue: 0, 
+      badgeValue: 0,
       fechaEntrega: new Date(),
       profesores: 0,
       aprobacion: false,
       selectedProfesor: null,
       initialProfessors: [
-        { label: "Mario Perez Aguilera ", value: 55 },
-        { label: "Daniel Valdebenito Celedon", value: 56 },
-        { label: "Guillermo Pizarro lopez", value: 57 },
-        { label: "Vladimir Quezada Cid", value: 58 },
-        { label: "Richard Chaparro Cares", value: 59 },
+        { label: "Mario Perez Aguilera ", value: 55, carrera: [2, 3] },
+        { label: "Daniel Valdebenito Celedon", value: 56, carrera: [2] },
+        { label: "Guillermo Pizarro lopez", value: 57, carrera: [3] },
+        { label: "Vladimir Quezada Cid", value: 58, carrera: [4] },
+        { label: "Richard Chaparro Cares", value: 59, carrera: [4] },
       ],
     };
     this.toast = React.createRef();
   }
+
   async componentDidMount() {
     const token = Cookies.get("token");
 
@@ -48,6 +49,17 @@ class ProductTable extends Component {
           }
         );
         this.setState({ products: response.data }); // Actualiza el estado con los datos de los productos
+
+        // Fetch user data to get carrera
+        const userData = await getUserData(token);
+        const userCarrera = userData.carrera.map((carrera) => carrera.id);
+
+        // Filter professors based on user's carrera
+        const filteredProfessors = this.state.initialProfessors.filter(
+          (profesor) => profesor.carrera.some((c) => userCarrera.includes(c))
+        );
+
+        this.setState({ initialProfessors: filteredProfessors });
       } catch (error) {
         console.error("Error al obtener datos de productos:", error);
       }
@@ -89,7 +101,7 @@ class ProductTable extends Component {
   };
 
   printSolicitud = async () => {
-    const token = Cookies.get('token');
+    const token = Cookies.get("token");
   
     if (token) {
       try {
@@ -119,41 +131,66 @@ class ProductTable extends Component {
           fechaEntrega.setDate(fechaEntrega.getDate() + 2); // Saturday, move to Monday
         }
   
-        // Construir el objeto de solicitud
+        // Create a new list of duplicated products based on quantity
+        const productosDuplicados = this.state.cart.map((item) => ({
+          id_producto: item.id_producto,
+          cantidad: item.quantity,
+        }));
+  
+        // Build the solicitud object
         const solicitud = {
-          fecha: new Date().toLocaleDateString('es-CL'),
-          fecha_entrega: fechaEntrega.toLocaleDateString('es-CL'),
-          productos: this.state.cart,
+          usuario: userData.id_user,
           profesor: this.state.selectedProfesor,
-          aprobacion: this.state.aprobacion,
-          usuario: userData, // Incluir información completa del usuario
+          productos: productosDuplicados,
+          companeros: [],
+          fecha_creacion: new Date().toISOString().split("T")[0],
+          fecha_entrega: fechaEntrega.toISOString().split("T")[0],
+          fecha_devolucion: null,
+          estado: "en revisión",
+          aprobacion: false,
         };
   
-        // Cerrar el modal
+        // Log the JSON to the console
+        console.log("JSON a enviar:", solicitud);
+  
+        // Close the modal
         this.setState({
           cart: [],
           badgeValue: 0,
           visible: false,
-          fechaEntrega: fechaEntrega, // Update fechaEntrega in the state
+          fechaEntrega: fechaEntrega,
         });
   
-        // Mostrar un toast o realizar otras acciones si es necesario
+        // Show a success toast or perform other actions if needed
         this.toast.current.show({
           severity: "success",
           summary: "Solicitud Enviada",
           detail: "La solicitud se ha enviado correctamente.",
-          life: 2000, // Display time in milliseconds
+          life: 2000,
         });
   
-        console.log(JSON.stringify(solicitud, null, 2));
+        // Enviar la solicitud POST
+        const response = await axios.post(
+          "http://127.0.0.1:8000/api/solicitudes",
+          solicitud,
+          {
+            headers: {
+              Authorization: `Token ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+  
+        // Manejar la respuesta según sea necesario
+        console.log("Respuesta del servidor:", response.data);
       } catch (error) {
-        // Manejar errores
-        console.error('Error al obtener datos del usuario:', error);
+        // Handle errors
+        console.error("Error al obtener datos del usuario:", error);
       }
     }
   };
-
   
+
   render() {
     const renderFooter = (
       <div>
@@ -227,11 +264,11 @@ class ProductTable extends Component {
             options={this.state.initialProfessors}
             onChange={(e) => this.setState({ selectedProfesor: e.value })}
             placeholder="Seleccione un profesor"
+            className="w-full my-4"
           />
 
           <DataTable value={this.state.cart} size="small">
             <Column field="nombre" header="Nombre" />
-            <Column field="stock" header="Stock" />
             <Column field="quantity" header="Cantidad" />
             <Column header="Acciones" body={this.removeFromCartTemplate} />
           </DataTable>

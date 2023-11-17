@@ -22,31 +22,24 @@ class SolicitudTable extends Component {
 
   async componentDidMount() {
     const token = Cookies.get("token");
-
+  
     if (token) {
       try {
         const userData = await getUserData(token);
         this.setState({ user: userData });
-
-        // Obtener datos de profesores
-        const profesoresResponse = await axios.get(
-          "http://127.0.0.1:8000/api/create",
-          {
-            headers: {
-              Authorization: `Token ${token}`,
-            },
-          }
-        );
-        this.setState({ profesoresData: profesoresResponse.data });
-
-        // Obtenemos la información de los productos al cargar el componente
+  
         const productsData = await getProducts();
         this.setState({ products: productsData });
+  
+        // Obtener datos de profesores desde la API
+        const profesoresData = await axios.get('http://127.0.0.1:8000/api/create');
+        this.setState({ profesoresData: profesoresData.data });
       } catch (error) {
         console.error("Error al obtener datos del usuario:", error);
       }
     }
   }
+  
 
   // Función para obtener el nombre de un producto por su ID
   getProductNameById(productId) {
@@ -56,9 +49,8 @@ class SolicitudTable extends Component {
     return product ? product.nombre : "Producto no encontrado";
   }
 
-  // Función para agregar keys a las solicitudes y productos
   addKeysToData() {
-    const { user } = this.state;
+    const { user, profesoresData } = this.state;
 
     if (user && user.solicitudes) {
       let keyCount = 0;
@@ -69,11 +61,16 @@ class SolicitudTable extends Component {
 
         const productos = solicitud.productos.map((producto, index) => {
           const nombre = this.getProductNameById(producto.id_producto);
+          const profesor = this.getProfesorById(
+            producto.id_user,
+            profesoresData
+          );
 
           return {
             ...producto,
             key: `${key}-${index}`,
             nombre,
+            profesor,
           };
         });
 
@@ -89,6 +86,18 @@ class SolicitudTable extends Component {
 
     return [];
   }
+
+  getProfesorById(userId, profesoresData) {
+    const profesor = profesoresData.find((prof) => prof.id_user === userId);
+    
+    if (profesor) {
+      const { nombre, apellido } = profesor;
+      return `${nombre} ${apellido}`;
+    } else {
+      return "Profesor no encontrado";
+    }
+  }
+  
 
   getEstadoStyleClass(estado) {
     switch (estado) {
@@ -117,7 +126,7 @@ class SolicitudTable extends Component {
         <div>
           {solicitudes.map((solicitud) => (
             <div key={solicitud.key} className="card">
-              <DataTable value={[solicitud]}  >
+              <DataTable value={[solicitud]}>
                 <Column field="id_solicitud" header="ID de solicitud"></Column>
                 <Column
                   field="fecha_creacion"
@@ -141,15 +150,37 @@ class SolicitudTable extends Component {
                     </span>
                   )}
                 ></Column>
-                <Column field="profesor" header="Profesor"></Column>
-                <Column body={<Button onClick={() => this.setState({ visible: true })}>
-                Ver Detalles
-              </Button>
-} ></Column>
+                <Column
+                  field="profesor"
+                  header="Profesor"
+                  body={(rowData) => (
+                    <span>
+                      {this.getProfesorById(
+                        rowData.profesor, // Cambia esto de rowData.id_user a rowData.profesor
+                        this.state.profesoresData
+                      )}
+                    </span>
+                  )}
+                ></Column>
+                <Column
+                  body={
+                    <Button
+                      size="small"
+                      rounded
+                      text
+                      severity="info"
+                      icon="pi pi-chevron-right"
+                      iconPos="right"
+                      label="Ver Detalles"
+                      className="text-sky-500"
+                      onClick={() => this.setState({ visible: true })}
+                    />
+                  }
+                ></Column>
               </DataTable>
 
-               {/* Dialog */}
-               <Dialog
+              {/* Dialog */}
+              <Dialog
                 header="Detalles"
                 visible={this.state.visible}
                 onHide={() => this.setState({ visible: false })}
@@ -158,7 +189,7 @@ class SolicitudTable extends Component {
                   <DataTable value={solicitud.productos}>
                     <Column field="id_producto" header="ID"></Column>
                     <Column field="nombre" header="Nombre"></Column>
-                    <Column filed="cantidad" header="Cantidad" ></Column>
+                    <Column filed="cantidad" header="Cantidad"></Column>
                     {/* Otros campos del producto que desees mostrar */}
                   </DataTable>
                 )}

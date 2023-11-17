@@ -3,6 +3,7 @@ import Dashboard from './Pages/Dashboard'
 import TableAlumnos from './Pages/Admin/AlumnosCrudTables';
 import TableProfesores from './Pages/Admin/ProfesoresCrudTable';
 import Products from './Pages/Alumnos/Products'
+import Solicitudes from './Pages/Alumnos/Solictudes';
 import Cookies from 'js-cookie';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 
@@ -18,6 +19,7 @@ const Router = () => {
         <Route path="/Profesores" element={token ? <TableProfesores /> : <Navigate to="/" />} />
 
         <Route path="/Productos" element={token ? <Products /> : <Navigate to="/" />} />
+        <Route path="/Solicitudes" element={token ? <Solicitudes /> : <Navigate to="/" />} />
       </Routes>
     </BrowserRouter>
   );

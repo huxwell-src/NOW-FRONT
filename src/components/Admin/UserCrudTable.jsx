@@ -7,6 +7,8 @@ import { Column } from 'primereact/column';
 import { InputText } from 'primereact/inputtext';
 import { Dialog } from 'primereact/dialog';
 import { Button } from 'primereact/button';
+import { Toast } from 'primereact/toast';
+import { Message } from 'primereact/message';
 
 class UserCrudTable extends Component {
   constructor(props) {
@@ -20,6 +22,12 @@ class UserCrudTable extends Component {
       userRole: props.userRole, // Rol de usuario (propiedad)
       editUserDialogVisible: false, // Visibilidad del diálogo de edición
       userToEdit: null, // Datos del usuario que se está editando
+
+      // Estados para el toast
+      showToast: false,
+      toastSeverity: '',
+      toastSummary: '',
+      toastDetail: '',
     };
   }
 
@@ -91,21 +99,26 @@ class UserCrudTable extends Component {
         // Actualizar la lista de usuarios después de la eliminación
         this.fetchUsers();
         this.hideDeleteUserDialog();
+
+        // Mostrar el toast de éxito
+        this.showToast('success', 'Usuario eliminado', '');
       })
       .catch(error => {
         console.error('Error deleting user:', error);
         this.hideDeleteUserDialog();
+
+        // Mostrar el toast de error
+        this.showToast('error', 'Error al eliminar usuario', error.message);
       });
   }
 
   // Mostrar el dialogo de la edicion de un usuario
   showEditUserDialog = (user) => {
-  this.setState({
-    editUserDialogVisible: true,
-    userToEdit: user,
-  });
-};
-
+    this.setState({
+      editUserDialogVisible: true,
+      userToEdit: user,
+    });
+  };
 
   // Ocultar el dialogo de la edicion de un usuario
   hideEditUserDialog = () => {
@@ -155,6 +168,15 @@ class UserCrudTable extends Component {
       });
   }
 
+  // Método para mostrar un toast
+  showToast = (severity, summary, detail) => {
+    this.setState({
+      showToast: true,
+      toastSeverity: severity,
+      toastSummary: summary,
+      toastDetail: detail,
+    });
+  };
 
   // Método de renderizado
   render() {
@@ -341,6 +363,15 @@ class UserCrudTable extends Component {
           )}
         </Dialog>
 
+        {/* Toast para mostrar mensajes de feedback */}
+        <Toast
+          visible={this.state.showToast}
+          severity={this.state.toastSeverity}
+          summary={this.state.toastSummary}
+          detail={this.state.toastDetail}
+          life={3000} // Tiempo en milisegundos que durará el toast
+          onClose={() => this.setState({ showToast: false })}
+        />
       </>
     );
   }

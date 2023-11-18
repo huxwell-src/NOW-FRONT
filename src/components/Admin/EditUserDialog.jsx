@@ -8,6 +8,7 @@ import Cookies from 'js-cookie';
 class EditUserDialog extends Component {
   state = {
     ...this.props.user,
+    password: '', 
   };
 
   handleInputChange = (e) => {
@@ -15,7 +16,12 @@ class EditUserDialog extends Component {
   }
 
   handleEditUser = () => {
-    const { id, rut, nombre, apellido, email, rol } = this.state;
+    const { id, rut, nombre, apellido, email, rol, curso, solicitudes, password } = this.state;
+    if (!id) {
+      console.error('ID del usuario no definido.');
+      return;
+    }
+
     const token = Cookies.get('token');
     const config = {
       headers: {
@@ -23,7 +29,16 @@ class EditUserDialog extends Component {
       },
     };
 
-    axios.put(`http://127.0.0.1:8000/api/edit/${id}`, { rut, nombre, apellido, email, rol }, config)
+    axios.put(`http://127.0.0.1:8000/api/edit/${id}`, {
+      rut,
+      nombre,
+      apellido,
+      email,
+      rol,
+      curso,
+      solicitudes,
+      password,
+    }, config)
       .then(() => {
         this.props.onUserUpdated();
         this.props.onHide();
@@ -34,6 +49,9 @@ class EditUserDialog extends Component {
   }
 
   render() {
+    if (!this.props.user || !this.props.user.id) {
+      return null; // O muestra un mensaje indicando que no hay usuario para editar
+    }
     return (
       <Dialog
         header="Editar Usuario"

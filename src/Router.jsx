@@ -4,6 +4,7 @@ import TableAlumnos from './Pages/Admin/AlumnosCrudTables';
 import TableProfesores from './Pages/Admin/ProfesoresCrudTable';
 import Products from './Pages/Alumnos/Products'
 import Solicitudes from './Pages/Alumnos/Solictudes';
+import SolicitudesRevision from './Pages/Profesores/SolicitudesRevision';
 import Cookies from 'js-cookie';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 
@@ -20,6 +21,8 @@ const Router = () => {
 
         <Route path="/Productos" element={token ? <Products /> : <Navigate to="/" />} />
         <Route path="/Solicitudes" element={token ? <Solicitudes /> : <Navigate to="/" />} />
+
+        <Route path="/Revision" element={token ? <SolicitudesRevision /> : <Navigate to="/" />} />
       </Routes>
     </BrowserRouter>
   );

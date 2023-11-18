@@ -69,7 +69,7 @@ class Layout extends Component {
 
     const menuDataProfesor = [
       { label: "Inicio", url: "/dashboard", icon: faHouse },
-      { label: "Profesores", url: "/Profesores", icon: faChalkboardUser },
+      { label: "Revision", url: "/Revision", icon: faChalkboardUser },
     ];
 
     const menuDataBodeguero = [
@@ -148,7 +148,7 @@ class Layout extends Component {
                   <>
                     {item.title ? (
                       <span
-                        className={`ml-4 pt-10 font-medium text-lg ${
+                        className={`ml-4 font-medium text-lg ${
                           item.title ? "" : "hidden"
                         } text-gray-950`}
                       >

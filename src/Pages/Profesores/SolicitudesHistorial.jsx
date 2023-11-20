@@ -1,8 +1,9 @@
 import { Component } from 'react';
 import Layout from '../../components/Layout';
 import Header from '../../components/Header';
-import RevisionTable from '../../components/Profesores/RevisionTable';
-class SolicitudesRevision extends Component {
+import AprobadosTable from '../../components/Profesores/AprobadosTable';
+
+class SolicitudesHistorial extends Component {
 
   render() {
 
@@ -22,10 +23,10 @@ class SolicitudesRevision extends Component {
       <>
         <Layout />
         <Header title="Revision Solicitudes"  route={routeData} />
-        <RevisionTable/>
+        <AprobadosTable/>
       </>
     );
   }
 }
 
-export default SolicitudesRevision;
+export default SolicitudesHistorial;

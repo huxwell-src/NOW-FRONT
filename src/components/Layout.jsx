@@ -70,6 +70,7 @@ class Layout extends Component {
     const menuDataProfesor = [
       { label: "Inicio", url: "/dashboard", icon: faHouse },
       { label: "Revision", url: "/Revision", icon: faChalkboardUser },
+      { label: "Historial", url: "/HistorialPrf", icon: faChalkboardUser },
     ];
 
     const menuDataBodeguero = [

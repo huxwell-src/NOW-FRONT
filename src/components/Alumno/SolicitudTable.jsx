@@ -60,10 +60,10 @@ class SolicitudTable extends Component {
     switch (estado) {
       case "en revisión":
         return "text-yellow-900 bg-yellow-300 ";
-      case "Completado":
-        return "text-green-800";
-      case "Cancelado":
-        return "text-red-800 ";
+      case "Rechazado":
+        return "text-red-900 bg-red-300 ";
+      case "en preparación":
+        return " text-green-700 bg-green-300 ";
       default:
         return "text-gray-800 ";
     }
@@ -98,7 +98,7 @@ class SolicitudTable extends Component {
 
     return (
       <>
-        <DataTable value={solicitudes}>
+        <DataTable value={solicitudes} emptyMessage="No hay solicitudes disponibles.">
           <Column field="id_solicitud" header="ID de solicitud"></Column>
           <Column field="fecha_creacion" header="Fecha de creación"></Column>
           <Column field="fecha_entrega" header="Fecha de entrega"></Column>

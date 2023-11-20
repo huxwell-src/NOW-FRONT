@@ -1,6 +1,6 @@
 # NOW App (Front-end)
 
-Descripción corta de tu aplicación y su propósito.
+Descripcivb ón corta de tu aplicación y su propósito.
 
 ## Requisitos Previos
 

@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import { Component } from 'react';
 import { Dialog } from 'primereact/dialog';
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
@@ -16,20 +16,27 @@ class EditUserDialog extends Component {
   }
 
   handleEditUser = () => {
-    const { id, rut, nombre, apellido, email, rol, curso, solicitudes, password } = this.state;
-    if (!id) {
+    const { id_user, rut, nombre, apellido, email, rol, curso, solicitudes, password } = this.state;
+  
+    if (!id_user) {
       console.error('ID del usuario no definido.');
       return;
     }
-
+  
     const token = Cookies.get('token');
+  
+    if (!token) {
+      console.error('Token no encontrado.');
+      return;
+    }
+  
     const config = {
       headers: {
         Authorization: `Token ${token}`,
       },
     };
-
-    axios.put(`http://127.0.0.1:8000/api/edit/${id}`, {
+  
+    axios.put(`http://127.0.0.1:8000/api/edit/${id_user}`, {
       rut,
       nombre,
       apellido,
@@ -44,10 +51,10 @@ class EditUserDialog extends Component {
         this.props.onHide();
       })
       .catch(error => {
-        console.error('Error editing user:', error);
+        console.error('Error al editar el usuario:', error.response ? error.response.data : error.message);
+        // Puedes mostrar mensajes de error al usuario aquí
       });
   }
-
   render() {
     if (!this.props.user || !this.props.user.id) {
       return null; // O muestra un mensaje indicando que no hay usuario para editar

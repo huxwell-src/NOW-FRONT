@@ -233,7 +233,7 @@ class ProductTable extends Component {
             >
               <Badge value={this.state.badgeValue} severity="danger" />
             </i>
-          </Button>
+          </Button> 
         </Header>
         <DataTable
           value={this.state.products}
@@ -256,6 +256,7 @@ class ProductTable extends Component {
           visible={this.state.visible}
           breakpoints={{ "960px": "75vw", "641px": "100vw" }}
           style={{ width: "70vw" }}
+          maximizable
           onHide={() => this.setState({ visible: false })}
           footer={renderFooter}
         >

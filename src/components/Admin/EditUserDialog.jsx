@@ -1,98 +1,121 @@
-import { Component } from 'react';
-import { Dialog } from 'primereact/dialog';
-import { InputText } from 'primereact/inputtext';
-import { Button } from 'primereact/button';
-import axios from 'axios';
-import Cookies from 'js-cookie';
+import React from "react";
+import { InputText } from "primereact/inputtext";
+import { Dropdown } from "primereact/dropdown";
+import { Dialog } from "primereact/dialog";
+import { Button } from "primereact/button";
 
-class EditUserDialog extends Component {
-  state = {
-    ...this.props.user,
-    password: '', 
-  };
-
-  handleInputChange = (e) => {
-    this.setState({ [e.target.name]: e.target.value });
-  }
-
-  handleEditUser = () => {
-    const { id_user, rut, nombre, apellido, email, rol, curso, solicitudes, password } = this.state;
-  
-    if (!id_user) {
-      console.error('ID del usuario no definido.');
-      return;
-    }
-  
-    const token = Cookies.get('token');
-  
-    if (!token) {
-      console.error('Token no encontrado.');
-      return;
-    }
-  
-    const config = {
-      headers: {
-        Authorization: `Token ${token}`,
-      },
-    };
-  
-    axios.put(`http://127.0.0.1:8000/api/edit/${id_user}`, {
-      rut,
-      nombre,
-      apellido,
-      email,
-      rol,
-      curso,
-      solicitudes,
-      password,
-    }, config)
-      .then(() => {
-        this.props.onUserUpdated();
-        this.props.onHide();
-      })
-      .catch(error => {
-        console.error('Error al editar el usuario:', error.response ? error.response.data : error.message);
-        // Puedes mostrar mensajes de error al usuario aquí
-      });
-  }
-  render() {
-    if (!this.props.user || !this.props.user.id) {
-      return null; // O muestra un mensaje indicando que no hay usuario para editar
-    }
-    return (
-      <Dialog
-        header="Editar Usuario"
-        visible={this.props.visible}
-        onHide={this.props.onHide}
-      >
-        <div className="p-fluid">
-          <div className="p-field">
+const EditUserDialog = ({ visible, userToEdit, onHide, onSaveChanges }) => {
+  return (
+    <Dialog
+      visible={visible}
+      onHide={onHide}
+      header="Editar Usuario"
+      breakpoints={{ "960px": "75vw", "641px": "100vw" }}
+      style={{ width: "50vw" }}
+      modal
+    >
+      {userToEdit && (
+        <div className="">
+          {/* ... (other fields) */}
+          <div className="flex flex-col mb-4">
             <label htmlFor="rut">Rut</label>
-            <InputText id="rut" name="rut" value={this.state.rut} onChange={this.handleInputChange} />
+            <InputText
+              id="rut"
+              value={userToEdit.rut}
+              onChange={(e) => {
+                const updatedUser = { ...userToEdit, rut: e.target.value };
+                onSaveChanges(updatedUser);
+              }}
+            />
           </div>
-          <div className="p-field">
+          <div className="flex flex-col mb-4">
             <label htmlFor="nombre">Nombre</label>
-            <InputText id="nombre" name="nombre" value={this.state.nombre} onChange={this.handleInputChange} />
+            <InputText
+              id="nombre"
+              value={userToEdit.nombre}
+              onChange={(e) => {
+                const updatedUser = { ...userToEdit, nombre: e.target.value };
+                onSaveChanges(updatedUser);
+              }}
+            />
           </div>
-          <div className="p-field">
+          <div className="flex flex-col mb-4">
             <label htmlFor="apellido">Apellido</label>
-            <InputText id="apellido" name="apellido" value={this.state.apellido} onChange={this.handleInputChange} />
+            <InputText
+              id="apellido"
+              value={userToEdit.apellido}
+              onChange={(e) => {
+                const updatedUser = { ...userToEdit, apellido: e.target.value };
+                onSaveChanges(updatedUser);
+              }}
+            />
           </div>
-          <div className="p-field">
+          <div className="flex flex-col mb-4">
             <label htmlFor="email">Email</label>
-            <InputText id="email" name="email" value={this.state.email} onChange={this.handleInputChange} />
+            <InputText
+              id="email"
+              value={userToEdit.email}
+              onChange={(e) => {
+                const updatedUser = { ...userToEdit, email: e.target.value };
+                onSaveChanges(updatedUser);
+              }}
+            />
           </div>
-          <div className="p-field">
-            <label htmlFor="rol">Rol</label>
-            <InputText id="rol" name="rol" value={this.state.rol} onChange={this.handleInputChange} />
+          <div className="flex flex-col mb-4">
+            <label htmlFor="curso">Curso</label>
+            <Dropdown
+              id="curso"
+              options={[
+                { label: "3A", value: "3A" },
+                { label: "3B", value: "3B" },
+                { label: "3C", value: "3C" },
+                { label: "4A", value: "4A" },
+                { label: "4B", value: "4B" },
+                { label: "4C", value: "4C" },
+                // Add more options as needed
+              ]}
+              value={userToEdit.curso}
+              onChange={(e) => {
+                const updatedUser = { ...userToEdit, curso: e.value };
+                onSaveChanges(updatedUser);
+              }}
+              placeholder="Select a Curso"
+            />
           </div>
-          <div className="p-mt-2">
-            <Button label="Guardar" onClick={this.handleEditUser} />
+          <div className="flex flex-col mb-4">
+            <label htmlFor="carrera">Carrera</label>
+            <InputText
+              id="carrera"
+              value={userToEdit.carrera}
+              onChange={(e) => {
+                const updatedUser = { ...userToEdit, carrera: e.target.value };
+                onSaveChanges(updatedUser);
+              }}
+            />
+          </div>
+          <div className="flex mt-4 w-full gap-2 items-end justify-end ">
+            {/* Botón para cancelar la edición */}
+            <Button
+              label="Cancelar"
+              rounded
+              size="small"
+              severity="danger"
+              onClick={onHide}
+            />
+            {/* Botón para guardar los cambios */}
+            <Button
+              label="Guardar"
+              onClick={onSaveChanges}
+              rounded
+              raised
+              size="small"
+              severity="success"
+            />
           </div>
         </div>
-      </Dialog>
-    );
-  }
-}
+      )}
+    </Dialog>
+  );
+};
 
 export default EditUserDialog;

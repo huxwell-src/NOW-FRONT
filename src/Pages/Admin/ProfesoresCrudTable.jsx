@@ -31,7 +31,7 @@ class TableProfesores extends Component {
                 <Header title="Gestion de profesores"  route={routeData} />
 
                 {/* Componente de tabla de usuarios con rol "Alumno" */}
-                <UserCrudTable userRole="Profesor" />
+                <UserCrudTable userRole="Profesor" manyCarreras={false} />
             </>
         )
     }

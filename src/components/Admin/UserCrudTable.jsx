@@ -8,6 +8,8 @@ import { InputText } from "primereact/inputtext";
 import { Dialog } from "primereact/dialog";
 import { Button } from "primereact/button";
 import { Toast } from "primereact/toast";
+import { Dropdown } from "primereact/dropdown"; // Import Dropdown component
+import { MultiSelect } from "primereact/multiselect";
 
 class UserCrudTable extends Component {
   constructor(props) {
@@ -15,6 +17,7 @@ class UserCrudTable extends Component {
     // Estado local del componente
     this.state = {
       users: [], // Lista de usuarios
+      oneCarrera: props.oneCarrera || false,
       globalFilter: "", // Filtro global de búsqueda
       deleteUserDialogVisible: false, // Visibilidad del diálogo de eliminación
       userToDeleteId: null, // ID del usuario a eliminar
@@ -27,6 +30,7 @@ class UserCrudTable extends Component {
       toastSeverity: "",
       toastSummary: "",
       toastDetail: "",
+      
     };
     this.toast = React.createRef(); // Referencia al componente Toast
   }
@@ -111,18 +115,51 @@ class UserCrudTable extends Component {
       },
     };
 
+    let carreraValue;
+
+    if (this.props.oneCarrera) {
+      // Si es un multiselect, el valor debería ser un array
+      carreraValue = [userToEdit.carrera];
+    } else {
+      // Si es un dropdown, el valor es el propio valor del campo "carrera"
+      carreraValue = userToEdit.carrera;
+    }
+
+    const updatedUser = {
+      ...userToEdit,
+      carrera: carreraValue,
+    };
+
     axios
       .put(
-        `http://127.0.0.1:8000/api/edit/${userToEdit.id_user}`,
-        userToEdit,
+        `http://127.0.0.1:8000/api/edit/${updatedUser.id_user}`,
+        updatedUser,
         config
       )
       .then(() => {
+        this.toast.current.show({
+          severity: "success",
+          summary: "Edicion",
+          detail: "El usuario ha sido editado exitosamente",
+          life: 3000,
+        });
         this.fetchUsers();
         this.hideEditUserDialog();
       })
       .catch((error) => {
         console.error("Error al guardar los cambios del usuario:", error);
+
+        // Mostrar detalles específicos del error en la consola
+        if (error.response) {
+          console.log("Respuesta del servidor:", error.response.data);
+          console.log("Estado HTTP:", error.response.status);
+          console.log("Cabeceras de respuesta:", error.response.headers);
+        } else if (error.request) {
+          console.log("La solicitud fue hecha pero no se recibió respuesta");
+        } else {
+          console.log("Error al configurar la solicitud", error.message);
+        }
+
         this.hideEditUserDialog();
       });
   };
@@ -199,6 +236,7 @@ class UserCrudTable extends Component {
         <span className="p-input-icon-left flex justify-between w-full">
           <i className="pi pi-search" />
           <InputText
+            severity="info"
             type="search"
             className=" w-full "
             value={this.state.globalFilter}
@@ -219,23 +257,25 @@ class UserCrudTable extends Component {
     // Función para definir las acciones en la tabla
     const actions = (user) => (
       <>
-        <Button
-          icon="pi pi-pencil"
-          rounded
-          outlined
-          severity="primary"
-          aria-label="Editar Usuario"
-          onClick={() => this.showEditUserDialog(user)}
-        />
-        <Button
-          icon="pi pi-trash "
-          rounded
-          outlined
-          severity="danger"
-          aria-label="User"
-          className="mx-2"
-          onClick={() => this.handleDeleteUser(user.id_user)}
-        />
+        <div className="flex">
+          <Button
+            icon="pi pi-pencil"
+            rounded
+            outlined
+            severity="primary"
+            aria-label="Editar Usuario"
+            onClick={() => this.showEditUserDialog(user)}
+          />
+          <Button
+            icon="pi pi-trash "
+            rounded
+            outlined
+            severity="danger"
+            aria-label="User"
+            className="mx-2"
+            onClick={() => this.handleDeleteUser(user.id_user)}
+          />
+        </div>
       </>
     );
 
@@ -267,101 +307,6 @@ class UserCrudTable extends Component {
             <Column body={actions}></Column>
           </DataTable>
         </div>
-        <Dialog
-          visible={this.state.editUserDialogVisible}
-          onHide={this.hideEditUserDialog}
-          header="Editar Usuario"
-          modal
-        >
-          {this.state.userToEdit && (
-            <div className="p-fluid">
-              <div className="p-field">
-                <label htmlFor="rut">Rut</label>
-                <InputText
-                  id="rut"
-                  value={this.state.userToEdit.rut}
-                  onChange={(e) => {
-                    const updatedUser = {
-                      ...this.state.userToEdit,
-                      rut: e.target.value,
-                    };
-                    this.setState({ userToEdit: updatedUser });
-                  }}
-                />
-              </div>
-              <div className="p-field">
-                <label htmlFor="nombre">Nombre</label>
-                <InputText
-                  id="nombre"
-                  value={this.state.userToEdit.nombre}
-                  onChange={(e) => {
-                    const updatedUser = {
-                      ...this.state.userToEdit,
-                      nombre: e.target.value,
-                    };
-                    this.setState({ userToEdit: updatedUser });
-                  }}
-                />
-              </div>
-              <div className="p-field">
-                <label htmlFor="apellido">Apellido</label>
-                <InputText
-                  id="apellido"
-                  value={this.state.userToEdit.apellido}
-                  onChange={(e) => {
-                    const updatedUser = {
-                      ...this.state.userToEdit,
-                      apellido: e.target.value,
-                    };
-                    this.setState({ userToEdit: updatedUser });
-                  }}
-                />
-              </div>
-              <div className="p-field">
-                <label htmlFor="email">Email</label>
-                <InputText
-                  id="email"
-                  value={this.state.userToEdit.email}
-                  onChange={(e) => {
-                    const updatedUser = {
-                      ...this.state.userToEdit,
-                      email: e.target.value,
-                    };
-                    this.setState({ userToEdit: updatedUser });
-                  }}
-                />
-              </div>
-              <div className="p-field">
-                <label htmlFor="curso">Curso</label>
-                <InputText
-                  id="curso"
-                  value={this.state.userToEdit.curso}
-                  onChange={(e) => {
-                    const updatedUser = {
-                      ...this.state.userToEdit,
-                      curso: e.target.value,
-                    };
-                    this.setState({ userToEdit: updatedUser });
-                  }}
-                />
-              </div>
-              <div className="p-mt-2">
-                {/* Botón para guardar los cambios */}
-                <Button
-                  label="Guardar"
-                  onClick={this.saveChangesToApi}
-                  className="p-button-success"
-                />
-                {/* Botón para cancelar la edición */}
-                <Button
-                  label="Cancelar"
-                  onClick={this.hideEditUserDialog}
-                  className="p-button-secondary p-ml-2"
-                />
-              </div>
-            </div>
-          )}
-        </Dialog>
 
         <Dialog
           visible={this.state.deleteUserDialogVisible}
@@ -400,11 +345,13 @@ class UserCrudTable extends Component {
           visible={this.state.editUserDialogVisible}
           onHide={this.hideEditUserDialog}
           header="Editar Usuario"
+          breakpoints={{ "960px": "75vw", "641px": "100vw" }}
+          style={{ width: "50vw" }}
           modal
         >
           {this.state.userToEdit && (
-            <div className="p-grid p-fluid">
-              <div className="p-col-12">
+            <div className="">
+              <div className="flex flex-col mb-4">
                 <label htmlFor="rut">Rut</label>
                 <InputText
                   id="rut"
@@ -418,7 +365,7 @@ class UserCrudTable extends Component {
                   }}
                 />
               </div>
-              <div className="p-col-12">
+              <div className="flex flex-col mb-4">
                 <label htmlFor="nombre">Nombre</label>
                 <InputText
                   id="nombre"
@@ -432,7 +379,7 @@ class UserCrudTable extends Component {
                   }}
                 />
               </div>
-              <div className="p-col-12">
+              <div className="flex flex-col mb-4">
                 <label htmlFor="apellido">Apellido</label>
                 <InputText
                   id="apellido"
@@ -446,7 +393,7 @@ class UserCrudTable extends Component {
                   }}
                 />
               </div>
-              <div className="p-col-12">
+              <div className="flex flex-col mb-4">
                 <label htmlFor="email">Email</label>
                 <InputText
                   id="email"
@@ -460,46 +407,86 @@ class UserCrudTable extends Component {
                   }}
                 />
               </div>
-              <div className="p-col-12">
+              <div className="flex flex-col mb-4">
                 <label htmlFor="curso">Curso</label>
-                <InputText
-                  id="curso"
+                <Dropdown
+                  options={[
+                    { label: "3A", value: "3A" },
+                    { label: "3B", value: "3B" },
+                    { label: "3C", value: "3C" },
+                    { label: "4A", value: "4A" },
+                    { label: "4B", value: "4B" },
+                    { label: "4C", value: "4C" },
+                    // Add more options as needed
+                  ]}
                   value={this.state.userToEdit.curso}
                   onChange={(e) => {
                     const updatedUser = {
                       ...this.state.userToEdit,
-                      curso: e.target.value,
+                      curso: e.value,
                     };
                     this.setState({ userToEdit: updatedUser });
                   }}
+                  placeholder="Selecciona el Curso"
                 />
               </div>
-              <div className="p-col-12">
+              <div className="flex flex-col mb-4">
                 <label htmlFor="carrera">Carrera</label>
-                <InputText
-                  id="carrera"
-                  value={this.state.userToEdit.carrera}
-                  onChange={(e) => {
-                    const updatedUser = {
-                      ...this.state.userToEdit,
-                      carrera: e.target.value,
-                    };
-                    this.setState({ userToEdit: updatedUser });
-                  }}
-                />
+                {this.props.oneCarrera ? (
+                  <Dropdown
+                    options={[
+                      { label: "Construcción (edificación)", value: 2 },
+                      { label: "Construcciones Metálicas", value: 3 },
+                      { label: "Electricidad", value: 4 },
+                    ]}
+                    value={this.state.userToEdit.carrera}
+                    onChange={(e) => {
+                      const updatedUser = {
+                        ...this.state.userToEdit,
+                        carrera: e.value,
+                      };
+                      this.setState({ userToEdit: updatedUser });
+                    }}
+                    placeholder="Selecciona la carrera"
+                  />
+                ) : (
+                  <MultiSelect
+                    display="chip"
+                    options={[
+                      { label: "Construcción (edificación)", value: 2 },
+                      { label: "Construcciones Metálicas", value: 3 },
+                      { label: "Electricidad", value: 4 },
+                      // Agrega más opciones según sea necesario
+                    ]}
+                    placeholder="Selecciona las carreras"
+                    value={this.state.userToEdit.carrera}
+                    onChange={(e) => {
+                      const updatedUser = {
+                        ...this.state.userToEdit,
+                        carrera: e.value,
+                      };
+                      this.setState({ userToEdit: updatedUser });
+                    }}
+                  />
+                )}
               </div>
-              <div className="p-col-12">
+              <div className="flex mt-4 w-full gap-2 items-end justify-end ">
+                {/* Botón para cancelar la edición */}
+                <Button
+                  label="Cancelar"
+                  rounded
+                  size="small"
+                  severity="danger"
+                  onClick={this.hideEditUserDialog}
+                />
                 {/* Botón para guardar los cambios */}
                 <Button
                   label="Guardar"
                   onClick={this.saveChangesToApi}
-                  className="p-button-success"
-                />
-                {/* Botón para cancelar la edición */}
-                <Button
-                  label="Cancelar"
-                  onClick={this.hideEditUserDialog}
-                  className="p-button-secondary"
+                  rounded
+                  raised
+                  size="small"
+                  severity="success"
                 />
               </div>
             </div>

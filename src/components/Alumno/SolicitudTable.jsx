@@ -3,10 +3,11 @@ import { getUserData } from "../../api/userService";
 import { getProducts } from "../../api/productService";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
-import { Chip } from "primereact/chip";
-import axios from "axios";
-import { Dialog } from "primereact/dialog";
 import { Button } from "primereact/button";
+import { Dialog } from "primereact/dialog";
+import { Tag } from "primereact/tag";
+import { Dropdown } from "primereact/dropdown";
+import axios from "axios";
 import Cookies from "js-cookie";
 
 class SolicitudTable extends Component {
@@ -17,7 +18,9 @@ class SolicitudTable extends Component {
       products: [],
       profesoresData: [],
       visible: false,
-      selectedSolicitud: null, // Nuevo estado para almacenar la solicitud seleccionada
+      selectedSolicitud: null,
+      globalFilter: "",
+      statuses: ['En Preparación', 'En Revisión', 'Rechazado'],
     };
   }
 
@@ -32,7 +35,9 @@ class SolicitudTable extends Component {
         const productsData = await getProducts();
         this.setState({ products: productsData });
 
-        const profesoresData = await axios.get("http://127.0.0.1:8000/api/create");
+        const profesoresData = await axios.get(
+          "http://127.0.0.1:8000/api/create"
+        );
         this.setState({ profesoresData: profesoresData.data });
       } catch (error) {
         console.error("Error al obtener datos del usuario:", error);
@@ -41,7 +46,9 @@ class SolicitudTable extends Component {
   }
 
   getProductNameById(productId) {
-    const product = this.state.products.find((prod) => prod.id_producto === productId);
+    const product = this.state.products.find(
+      (prod) => prod.id_producto === productId
+    );
     return product ? product.nombre : "Producto no encontrado";
   }
 
@@ -59,18 +66,24 @@ class SolicitudTable extends Component {
   getEstadoStyleClass(estado) {
     switch (estado) {
       case "en revisión":
-        return "text-yellow-900 bg-yellow-300 ";
+        return "warning";
       case "Rechazado":
-        return "text-red-900 bg-red-300 ";
+        return "danger";
       case "en preparación":
-        return " text-green-700 bg-green-300 ";
+        return "success";
       default:
         return "text-gray-800 ";
     }
   }
 
   render() {
-    const { user, profesoresData, selectedSolicitud } = this.state;
+    const {
+      user,
+      profesoresData,
+      selectedSolicitud,
+      globalFilter,
+      statuses,
+    } = this.state;
 
     if (!user || !user.solicitudes || user.solicitudes.length === 0) {
       return null;
@@ -96,48 +109,119 @@ class SolicitudTable extends Component {
       };
     });
 
+    const getSeverity = (status) => {
+      switch (status) {
+        case "Rechazado":
+          return "danger";
+
+        case "En Preparación":
+          return "success";
+          
+        case "En Revisión":
+          return "warning";
+
+        case "renewal":
+          return null;
+      }
+    };
+
+    const statusItemTemplate = (option) => {
+      return <Tag value={option} severity={getSeverity(option)} />;
+    };
+
+    const statusFilterTemplate = (options) => {
+      return (
+        <Dropdown
+          value={options.value}
+          options={statuses}
+          onChange={(e) => options.filterCallback(e.value, options.index)}
+          itemTemplate={statusItemTemplate}
+          placeholder="Select One"
+          className="p-column-filter"
+          showClear
+        />
+      );
+    };
+
     return (
       <>
-        <DataTable value={solicitudes} emptyMessage="No hay solicitudes disponibles.">
-          <Column field="id_solicitud" header="ID de solicitud"></Column>
-          <Column field="fecha_creacion" header="Fecha de creación"></Column>
-          <Column field="fecha_entrega" header="Fecha de entrega"></Column>
+        <DataTable
+          value={solicitudes}
+          removableSort
+          sortMode="multiple"
+          emptyMessage="No hay solicitudes disponibles."
+          paginator
+          rows={10}
+          rowsPerPageOptions={[10, 15, 25, 50]}
+          tableStyle={{ minWidth: "50rem" }}
+        >
+          <Column
+            field="id_solicitud"
+            sortable
+            header="ID de solicitud"
+            filter
+            filterPlaceholder="Buscar ID"
+          ></Column>
+          <Column
+            field="fecha_creacion"
+            sortable
+            header="Fecha de creación"
+            filter
+            filterPlaceholder="Buscar fecha"
+          ></Column>
+          <Column
+            field="fecha_entrega"
+            sortable
+            header="Fecha de entrega"
+            filter
+            filterPlaceholder="Buscar fecha"
+          ></Column>
           <Column
             field="estado"
             header="Estado"
+            sortable
+            filterElement={statusFilterTemplate}
             body={(rowData) => (
               <span className="text-sm font-semibold">
-                <Chip
-                  label={rowData.estado}
-                  className={`px-4 capitalize ${this.getEstadoStyleClass(rowData.estado)}`}
+                <Tag
+                  value={rowData.estado}
+                  className="capitalize"
+                  severity={this.getEstadoStyleClass(rowData.estado)}
                 />
               </span>
             )}
+            filter
+            filterPlaceholder="Buscar estado"
           ></Column>
-           <Column
-                  field="profesor"
-                  header="Profesor"
-                  body={(rowData) => (
-                    <span>
-                      {this.getProfesorById(
-                        rowData.profesor, 
-                        this.state.profesoresData
-                      )}
-                    </span>
-                  )}
-                ></Column>
+          <Column
+            field="profesor"
+            header="Profesor"
+            sortable
+            body={(rowData) => (
+              <span>
+                {this.getProfesorById(
+                  rowData.profesor,
+                  this.state.profesoresData
+                )}
+              </span>
+            )}
+            filter
+            filterPlaceholder="Buscar profesor"
+          ></Column>
           <Column
             body={(rowData) => (
               <Button
                 size="small"
+                sortable
                 rounded
                 text
-                severity="info"
                 icon="pi pi-chevron-right"
                 iconPos="right"
                 label="Ver Detalles"
                 className="text-sky-500"
-                onClick={() => this.setState({ visible: true, selectedSolicitud: rowData })}
+                onClick={() =>
+                  this.setState({ visible: true, selectedSolicitud: rowData })
+                }
               />
             )}
           ></Column>
@@ -149,13 +233,15 @@ class SolicitudTable extends Component {
           visible={this.state.visible}
           onHide={() => this.setState({ visible: false })}
         >
-          {selectedSolicitud && selectedSolicitud.productos && selectedSolicitud.productos.length > 0 && (
-            <DataTable value={selectedSolicitud.productos}>
-              <Column field="id_producto" header="ID"></Column>
-              <Column field="nombre" header="Nombre"></Column>
-              <Column field="cantidad" header="Cantidad"></Column>
-            </DataTable>
-          )}
+          {selectedSolicitud &&
+            selectedSolicitud.productos &&
+            selectedSolicitud.productos.length > 0 && (
+              <DataTable value={selectedSolicitud.productos}>
+                <Column field="id_producto" header="ID"></Column>
+                <Column field="nombre" header="Nombre"></Column>
+                <Column field="cantidad" header="Cantidad"></Column>
+              </DataTable>
+            )}
         </Dialog>
       </>
     );

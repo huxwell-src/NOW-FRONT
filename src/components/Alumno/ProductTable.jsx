@@ -10,6 +10,7 @@ import { Dropdown } from "primereact/dropdown";
 import Header from "../Header";
 import { getUserData } from "../../api/userService";
 import { Toast } from "primereact/toast";
+import { Divider } from "primereact/divider";
 
 class ProductTable extends Component {
   constructor(props) {
@@ -102,12 +103,12 @@ class ProductTable extends Component {
 
   printSolicitud = async () => {
     const token = Cookies.get("token");
-  
+
     if (token) {
       try {
         // Obtener datos del usuario
         const userData = await getUserData(token);
-  
+
         // Validations
         if (!this.state.selectedProfesor) {
           // Show an error toast or handle the error accordingly
@@ -119,24 +120,24 @@ class ProductTable extends Component {
           });
           return;
         }
-  
+
         // Calculate fechaEntrega with at least 14 days from today
         let fechaEntrega = new Date();
         fechaEntrega.setDate(fechaEntrega.getDate() + 14);
-  
+
         // Adjust fechaEntrega if it falls on a Saturday or Sunday
         if (fechaEntrega.getDay() === 0) {
           fechaEntrega.setDate(fechaEntrega.getDate() + 1); // Sunday, move to Monday
         } else if (fechaEntrega.getDay() === 6) {
           fechaEntrega.setDate(fechaEntrega.getDate() + 2); // Saturday, move to Monday
         }
-  
+
         // Create a new list of duplicated products based on quantity
         const productosDuplicados = this.state.cart.map((item) => ({
           id_producto: item.id_producto,
           cantidad: item.quantity,
         }));
-  
+
         // Build the solicitud object
         const solicitud = {
           usuario: userData.id_user,
@@ -149,10 +150,10 @@ class ProductTable extends Component {
           estado: "en revisión",
           aprobacion: false,
         };
-  
+
         // Log the JSON to the console
         console.log("JSON a enviar:", solicitud);
-  
+
         // Close the modal
         this.setState({
           cart: [],
@@ -160,7 +161,7 @@ class ProductTable extends Component {
           visible: false,
           fechaEntrega: fechaEntrega,
         });
-  
+
         // Show a success toast or perform other actions if needed
         this.toast.current.show({
           severity: "success",
@@ -168,7 +169,7 @@ class ProductTable extends Component {
           detail: "La solicitud se ha enviado correctamente.",
           life: 2000,
         });
-  
+
         // Enviar la solicitud POST
         const response = await axios.post(
           "http://127.0.0.1:8000/api/solicitudes",
@@ -180,7 +181,7 @@ class ProductTable extends Component {
             },
           }
         );
-  
+
         // Manejar la respuesta según sea necesario
         console.log("Respuesta del servidor:", response.data);
       } catch (error) {
@@ -189,7 +190,6 @@ class ProductTable extends Component {
       }
     }
   };
-  
 
   render() {
     const renderFooter = (
@@ -233,8 +233,10 @@ class ProductTable extends Component {
             >
               <Badge value={this.state.badgeValue} severity="danger" />
             </i>
-          </Button> 
+          </Button>
         </Header>
+
+
         <DataTable
           value={this.state.products}
           tableStyle={{ minWidth: "50rem" }}

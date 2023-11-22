@@ -20,7 +20,7 @@ class SolicitudTable extends Component {
       visible: false,
       selectedSolicitud: null,
       globalFilter: "",
-      statuses: ['En Preparación', 'En Revisión', 'Rechazado'],
+      statuses: ["En Preparación", "En Revisión", "Rechazado"],
     };
   }
 
@@ -77,13 +77,8 @@ class SolicitudTable extends Component {
   }
 
   render() {
-    const {
-      user,
-      profesoresData,
-      selectedSolicitud,
-      globalFilter,
-      statuses,
-    } = this.state;
+    const { user, profesoresData, selectedSolicitud, globalFilter, statuses } =
+      this.state;
 
     if (!user || !user.solicitudes || user.solicitudes.length === 0) {
       return null;
@@ -116,7 +111,7 @@ class SolicitudTable extends Component {
 
         case "En Preparación":
           return "success";
-          
+
         case "En Revisión":
           return "warning";
 
@@ -134,11 +129,12 @@ class SolicitudTable extends Component {
         <Dropdown
           value={options.value}
           options={statuses}
-          onChange={(e) => options.filterCallback(e.value, options.index)}
+          onChange={(e) => options.filterCallback(e.value)}
           itemTemplate={statusItemTemplate}
-          placeholder="Select One"
+          placeholder="Seleccionar estado"
           className="p-column-filter"
           showClear
+          style={{ minWidth: "12rem" }}
         />
       );
     };
@@ -149,6 +145,7 @@ class SolicitudTable extends Component {
           value={solicitudes}
           removableSort
           sortMode="multiple"
+          filterDisplay="row"
           emptyMessage="No hay solicitudes disponibles."
           paginator
           rows={10}
@@ -180,7 +177,11 @@ class SolicitudTable extends Component {
             field="estado"
             header="Estado"
             sortable
+            showFilterMenu={false}
+            filterMenuStyle={{ width: "14rem" }}
             filterElement={statusFilterTemplate}
+            filter
+            filterPlaceholder="Buscar estado"
             body={(rowData) => (
               <span className="text-sm font-semibold">
                 <Tag
@@ -190,8 +191,6 @@ class SolicitudTable extends Component {
                 />
               </span>
             )}
-            filter
-            filterPlaceholder="Buscar estado"
           ></Column>
           <Column
             field="profesor"

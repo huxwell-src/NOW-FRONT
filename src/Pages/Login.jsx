@@ -4,6 +4,7 @@ import Cookies from "js-cookie";
 import { Navigate } from "react-router-dom";
 import { InputText } from "primereact/inputtext";
 import { Button } from "primereact/button";
+import { Link } from "react-router-dom";
 
 class Login extends Component {
   constructor(props) {
@@ -36,27 +37,27 @@ class Login extends Component {
 
   handleLogin = async (e) => {
     e.preventDefault();
-  
+
     const loginData = {
       email: this.state.email,
       password: this.state.password,
     };
-  
+
     try {
       const response = await axios.post(
         "http://127.0.0.1:8000/api/login",
         loginData
       );
-  
+
       if (response.data.token) {
         const token = response.data.token;
-  
+
         const userResponse = await axios.get("http://127.0.0.1:8000/api/user", {
           headers: {
             Authorization: `Token ${token}`,
           },
         });
-  
+
         this.handleLoginSuccess(token, userResponse.data.user);
       }
     } catch (error) {
@@ -69,7 +70,6 @@ class Login extends Component {
       }
     }
   };
-  
 
   render() {
     if (this.state.loggedIn) {
@@ -127,14 +127,17 @@ class Login extends Component {
                   </div>
                 </div>
 
+                <Link>
+                  <br />
+                  <span className="block text-sky-500 hover:underline  ">Olvide mi contraseña</span>
+                </Link>
+
                 <div className="w-full flex justify-end">
                   <Button
                     type="submit"
                     label="Ingresar"
                     rounded
                     raised
-                    severity="info"
-                    className="bg-sky-500 border-0"
                   />
                 </div>
               </form>

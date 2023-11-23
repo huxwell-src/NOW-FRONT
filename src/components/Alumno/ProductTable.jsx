@@ -220,6 +220,8 @@ class ProductTable extends Component {
       },
     ];
 
+    const scrollHeight = "calc(100vh - 256px)";
+
     return (
       <>
         <Header title="Productos" route={routeData}>
@@ -236,17 +238,17 @@ class ProductTable extends Component {
           </Button>
         </Header>
 
-
         <DataTable
           value={this.state.products}
           tableStyle={{ minWidth: "50rem" }}
           frozenWidth="200px"
           scrollable
+          scrollHeight={scrollHeight}
           paginator
           rows={25}
           rowsPerPageOptions={[25, 50, 100, 200]}
         >
-          <Column field="nombre" header="Nombre" />
+          <Column field="nombre"  header="Nombre" />
           <Column field="descripcion" header="Descripción" />
           <Column field="stock" header="stock" />
           <Column frozen alignFrozen="right" body={this.addToCartTemplate} />

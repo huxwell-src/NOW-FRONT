@@ -58,7 +58,6 @@ class Layout extends Component {
       { label: "Inicio", url: "/dashboard", icon: faHouse },
       { label: "Alumnos", url: "/Alumnos", icon: faGraduationCap },
       { label: "Profesores", url: "/Profesores", icon: faChalkboardUser },
-      { label: "Bodeguero", url: "/Bodeguero", icon: faToolbox },
     ];
 
     const menuDataAlumno = [
@@ -75,7 +74,9 @@ class Layout extends Component {
 
     const menuDataBodeguero = [
       { label: "Inicio", url: "/dashboard", icon: faHouse },
-      { label: "Bodeguero", url: "/Bodeguero", icon: faToolbox },
+      { label: "Preparacion", url: "/Preparacion", icon: faToolbox },
+      { label: "Entrega", url: "/Entrega", icon: faToolbox },
+      { label: "Pendientes", url: "/Pendientes", icon: faToolbox },
     ];
 
     const header = (

@@ -11,8 +11,8 @@ import { Toast } from "primereact/toast";
 import { Dropdown } from "primereact/dropdown"; // Import Dropdown component
 import { MultiSelect } from "primereact/multiselect";
 import { saveAs } from "file-saver"; // Importar saveAs desde file-saver
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+import { Toolbar } from "primereact/toolbar";
+import { SplitButton } from "primereact/splitbutton";
 
 class UserCrudTable extends Component {
   constructor(props) {
@@ -27,7 +27,8 @@ class UserCrudTable extends Component {
       userRole: props.userRole, // Rol de usuario (propiedad)
       editUserDialogVisible: false, // Visibilidad del diálogo de edición
       userToEdit: null, // Datos del usuario que se está editando
-
+      selectedUserSolicitudes: [],
+      solicitudesDialogVisible: false,
       // Estados para el toast
       showToast: false,
       toastSeverity: "",
@@ -349,48 +350,123 @@ class UserCrudTable extends Component {
     });
   };
 
+  showSolicitudesDialog = (user) => {
+    console.log("Mostrar diálogo de solicitudes", user.solicitudes);
+    this.setState({
+      selectedUserSolicitudes: user.solicitudes,
+      selectedUserId: user.id_user, // Agregar esta línea para almacenar el ID del usuario seleccionado
+      solicitudesDialogVisible: true,
+    });
+  };
+
+  hideSolicitudesDialog = () => {
+    this.setState({
+      selectedUserSolicitudes: [],
+      solicitudesDialogVisible: false,
+    });
+  };
+
+  exportPDFUserSolicitudes = () => {
+    import("jspdf").then((jsPDF) => {
+      import("jspdf-autotable").then(() => {
+        const { selectedUserSolicitudes, selectedUserId } = this.state;
+        const doc = new jsPDF.default();
+
+        // Encabezado del PDF
+        doc.text("Informe de Pérdidas y Atrasos", 14, 16);
+
+        // Fecha actual
+        const currentDate = new Date().toLocaleDateString();
+
+        // Texto informativo
+        const userInfo = selectedUserSolicitudes.find(
+          (solicitud) => solicitud.usuario.id_user === selectedUserId
+        );
+        const totalAtrasadas = selectedUserSolicitudes.filter(
+          (solicitud) =>
+            solicitud.usuario.id_user === selectedUserId &&
+            solicitud.estado === "atrasado"
+        ).length;
+        const totalReportadas = selectedUserSolicitudes.filter(
+          (solicitud) =>
+            solicitud.usuario.id_user === selectedUserId &&
+            solicitud.estado === "reportado"
+        ).length;
+
+        const infoText = `A día ${currentDate}, el alumno ${
+          userInfo?.usuario.nombre || ""
+        } (${userInfo?.usuario.rut || ""}), del curso ${
+          userInfo?.usuario.curso || ""
+        } y carrera ${
+          userInfo?.usuario.carrera
+            ? userInfo.usuario.carrera
+                .map((carrera) => carrera.nombre)
+                .join(", ")
+            : ""
+        }, tiene un total de ${totalAtrasadas} solicitudes atrasadas y ${totalReportadas} reportadas por pérdida.`;
+
+        // Configuración de tamaño de fuente y anchura máxima
+        doc.setFontSize(10);
+        const maxWidth = doc.internal.pageSize.width - 2 * 14;
+
+        // Dividir el texto en líneas que se ajusten a la anchura máxima
+        const lines = doc.splitTextToSize(infoText, maxWidth);
+
+        // Agregar el texto al PDF
+        doc.text(lines, 14, 26);
+
+        // Filtrar las solicitudes por el ID del usuario seleccionado y el estado
+        const data = selectedUserSolicitudes
+          .filter(
+            (solicitud) =>
+              solicitud.usuario.id_user === selectedUserId &&
+              (solicitud.estado === "atrasado" ||
+                solicitud.estado === "reportado")
+          )
+          .map((solicitud) => [
+            solicitud.id_solicitud,
+            `${solicitud.usuario.nombre} ${solicitud.usuario.apellido}`,
+            solicitud.usuario.rut,
+            `${solicitud.profesor.nombre} ${solicitud.profesor.apellido}`,
+            solicitud.fecha_creacion,
+            solicitud.fecha_entrega,
+            solicitud.fecha_devolucion,
+            solicitud.estado,
+            solicitud.notas,
+            // Agregar más campos según tus necesidades
+          ]);
+
+        // Configuración de la tabla en el PDF
+        doc.autoTable({
+          head: [
+            [
+              "ID Solicitud",
+              "Nombre Usuario",
+              "RUT Usuario",
+              "Nombre Profesor",
+              "Fecha Creación",
+              "Fecha Entrega",
+              "Fecha Devolución",
+              "Estado",
+              "Notas",
+              // Agregar más encabezados según tus necesidades
+            ],
+          ],
+          body: data,
+          startY: 38, // Ajustar la posición de inicio de la tabla
+        });
+
+        // Guardar el PDF con el rut del alumno y la fecha y hora actual
+        const fileName = `informe_${userInfo?.usuario.rut}_${currentDate
+          .replace(/\//g, "_")
+          .replace(/\s+/g, "-")}.pdf`;
+        doc.save(fileName);
+      });
+    });
+  };
+
   // Método de renderizado
   render() {
-    const header = (
-      <div className="flex gap-2 w-full align-items-center justify-between export-buttons">
-        <Button
-          label="Agregar"
-          severity="success"
-          size="small"
-          raised
-          rounded
-          icon="pi pi-user-plus"
-          onClick={this.showNewUserDialog}
-        />
-        {/* Botones de exportación */}
-        <div>
-          <Button
-            type="button"
-            icon="pi pi-file"
-            rounded
-            onClick={() => this.exportCSV(false)}
-            data-pr-tooltip="CSV"
-          />
-          <Button
-            type="button"
-            icon="pi pi-file-excel"
-            severity="success"
-            rounded
-            onClick={this.exportExcel}
-            data-pr-tooltip="XLS"
-          />
-          <Button
-            type="button"
-            icon="pi pi-file-pdf"
-            severity="warning"
-            rounded
-            onClick={this.exportPDF}
-            data-pr-tooltip="PDF"
-          />
-        </div>
-      </div>
-    );
-
     // Función para definir las acciones en la tabla
     const actions = (user) => (
       <>
@@ -400,33 +476,101 @@ class UserCrudTable extends Component {
             rounded
             outlined
             severity="primary"
-            aria-label="Editar Usuario"
+            className="mx-1"
             onClick={() => this.showEditUserDialog(user)}
           />
+          {this.state.userRole === "Alumno" && (
+            <Button
+              icon="pi pi-folder"
+              rounded
+              outlined
+              severity="warning"
+              className="mx-1"
+              onClick={() => this.showSolicitudesDialog(user)}
+            />
+          )}
           <Button
             icon="pi pi-trash "
             rounded
             outlined
             severity="danger"
-            aria-label="User"
-            className="mx-2"
+            className="mx-1"
             onClick={() => this.handleDeleteUser(user.id_user)}
           />
         </div>
       </>
     );
 
-    const scrollHeight = "calc(100vh - 330px)";
+    const report = (user) => (
+      <>
+        <Button
+          label="Reporte"
+          outlined
+          icon="pi pi-file-pdf"
+          onClick={() => this.exportPDFUserSolicitudes(user)}
+          className="p-button-success p-button-rounded"
+        />
+      </>
+    );
+
+    const scrollHeight = "calc(100vh - 295px)";
+
+    const leftToolbarTemplate = () => {
+      return (
+        <div className="flex flex-wrap gap-2">
+          <Button
+            label="Agregar"
+            severity="success"
+            size="small"
+            raised
+            rounded
+            icon="pi pi-user-plus"
+            onClick={this.showNewUserDialog}
+          />
+        </div>
+      );
+    };
+
+    const rightToolbarTemplate = () => {
+      const items = [
+        {
+          label: "Exportar a XLS",
+          icon: "pi pi-file-excel",
+          command: this.exportExcel,
+        },
+        {
+          label: "Exportar a PDF",
+          icon: "pi pi-file-pdf",
+          command: this.exportPDF,
+        },
+      ];
+
+      return (
+        <SplitButton
+          model={items}
+          iconPos="right"
+          label="Exportar"
+          text
+          className="p-button-success p-button-rounded"
+        />
+      );
+    };
 
     return (
       <>
         <Toast ref={this.toast} />
+        <Toolbar
+          className="!border-none !py-0.5 "
+          left={leftToolbarTemplate}
+          right={rightToolbarTemplate}
+        ></Toolbar>
+
         <div className="h-1/4">
           {/* Tabla de datos */}
           <DataTable
-            header={header}
             scrollable
             scrollHeight={scrollHeight}
+            filterDisplay="row"
             className="100%"
             removableSort
             value={this.state.users}
@@ -481,6 +625,49 @@ class UserCrudTable extends Component {
             <Column body={actions}></Column>
           </DataTable>
         </div>
+
+        {/* Diálogo para mostrar las solicitudes del usuario */}
+        <Dialog
+          visible={this.state.solicitudesDialogVisible}
+          onHide={this.hideSolicitudesDialog}
+          header="Solicitudes del Usuario"
+          breakpoints={{ "1400px": "100vw" }}
+          style={{ width: "65vw" }}
+          modal
+        >
+          <Toolbar
+            className="!border-none !py-3 !bg-white "
+            right={report}
+          ></Toolbar>
+          {/* Tabla de solicitudes del usuario */}
+          <DataTable
+            value={this.state.selectedUserSolicitudes}
+            className="100%"
+            scrollable
+            scrollHeight="calc(100vh - 295px)"
+          >
+            {/* Columna para el ID de la solicitud */}
+            <Column field="id_solicitud" header="ID Solicitud" />
+
+            {/* Columna para la fecha de creación */}
+            <Column field="fecha_creacion" header="Fecha de Creación" />
+
+            {/* Columna para la fecha de entrega */}
+            <Column field="fecha_entrega" header="Fecha de Entrega" />
+
+            {/* Columna para la fecha de devolución */}
+            <Column field="fecha_devolucion" header="Fecha de Devolución" />
+
+            {/* Columna para el estado de la solicitud */}
+            <Column field="estado" header="Estado" />
+
+            {/* Columna para la aprobación de la solicitud */}
+            <Column field="aprobacion" header="Aprobación" />
+
+            {/* Columna para el nombre del profesor */}
+            <Column field="profesor.nombre" header="Nombre del Profesor" />
+          </DataTable>
+        </Dialog>
 
         <Dialog
           visible={this.state.deleteUserDialogVisible}

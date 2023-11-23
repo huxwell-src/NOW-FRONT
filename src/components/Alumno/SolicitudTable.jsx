@@ -9,6 +9,7 @@ import { Tag } from "primereact/tag";
 import { Dropdown } from "primereact/dropdown";
 import axios from "axios";
 import Cookies from "js-cookie";
+import { InputTextarea } from "primereact/inputtextarea";
 
 class SolicitudTable extends Component {
   constructor(props) {
@@ -77,8 +78,7 @@ class SolicitudTable extends Component {
   }
 
   render() {
-    const { user, profesoresData, selectedSolicitud, globalFilter, statuses } =
-      this.state;
+    const { user, profesoresData, selectedSolicitud, statuses } = this.state;
 
     if (!user || !user.solicitudes || user.solicitudes.length === 0) {
       return null;
@@ -107,6 +107,9 @@ class SolicitudTable extends Component {
     const getSeverity = (status) => {
       switch (status) {
         case "Rechazado":
+          return "danger";
+
+        case "Atrasado":
           return "danger";
 
         case "En Preparación":
@@ -144,11 +147,12 @@ class SolicitudTable extends Component {
         <DataTable
           value={solicitudes}
           removableSort
-          sortMode="multiple"
           filterDisplay="row"
           emptyMessage="No hay solicitudes disponibles."
           paginator
           rows={10}
+          sortOrder={-1}
+          sortField="id_solicitud"
           rowsPerPageOptions={[10, 15, 25, 50]}
           tableStyle={{ minWidth: "50rem" }}
         >
@@ -198,15 +202,13 @@ class SolicitudTable extends Component {
             sortable
             body={(rowData) => (
               <span>
-                {this.getProfesorById(
-                  rowData.profesor,
-                  this.state.profesoresData
-                )}
+                {rowData.profesor.nombre} {rowData.profesor.apellido}
               </span>
             )}
             filter
             filterPlaceholder="Buscar profesor"
           ></Column>
+
           <Column
             body={(rowData) => (
               <Button
@@ -227,8 +229,12 @@ class SolicitudTable extends Component {
         </DataTable>
 
         {/* Dialog */}
+        {/* Dialog */}
         <Dialog
           header="Detalles"
+          modal
+          breakpoints={{ "960px": "75vw", "641px": "100vw" }}
+          style={{ width: "50vw" }}
           visible={this.state.visible}
           onHide={() => this.setState({ visible: false })}
         >
@@ -240,6 +246,24 @@ class SolicitudTable extends Component {
                 <Column field="nombre" header="Nombre"></Column>
                 <Column field="cantidad" header="Cantidad"></Column>
               </DataTable>
+            )}
+          {/* Nota de la solicitud */}
+          {selectedSolicitud &&
+            selectedSolicitud.estado === "Listo para retiro" && (
+              <div className="my-4">
+                <h2 className="text-lg font-semibold">Nota del profesor:</h2>
+                <InputTextarea
+                  rows={2}
+                  className="w-full"
+                  disabled
+                  value={selectedSolicitud.nota || "No hay notas"}
+                  style={{
+                    backgroundColor: selectedSolicitud.nota
+                      ? "#fff"
+                      : "#f0f0f0",
+                  }}
+                />
+              </div>
             )}
         </Dialog>
       </>

@@ -60,7 +60,7 @@ class RevisionTable extends Component {
 
       // Filtrar las solicitudes para mostrar solo las del usuario actual
       const solicitudesUsuarioActual = solicitudesResponse.data.filter(
-        (solicitud) => solicitud.profesor === currentUser.id_user
+        (solicitud) => solicitud.profesor.id_user === currentUser.id_user
       );
 
       // Filtrar las solicitudes para mostrar solo las que están en revisión
@@ -143,165 +143,140 @@ class RevisionTable extends Component {
   enviarFormulario = async () => {
     try {
       const { selectedSolicitud, nota, rowStates } = this.state;
-
+  
       // Verificar que haya una solicitud seleccionada
       if (!selectedSolicitud) {
         console.error("No hay solicitud seleccionada para enviar.");
         return;
       }
-
+  
       // Verificar que todos los ToggleButtons estén activados
       const allButtonsActivated = selectedSolicitud.productos.every(
         (producto) => rowStates[producto.id_producto]
       );
-
+  
       if (!allButtonsActivated) {
         console.error("No todos los ToggleButtons están activados.");
         return;
       }
-
-      // Obtener el token de las cookies
-      const token = Cookies.get("token");
-
-      // Verificar si el token está presente
-      if (!token) {
-        console.error("Token no encontrado en las cookies");
-        return;
-      }
-
+  
       // Construir el objeto de datos a enviar
       const dataToSend = {
         id_solicitud: selectedSolicitud.id_solicitud,
-        usuario: selectedSolicitud.usuario,
+        usuario: selectedSolicitud.usuario.id_user, // Cambiado para enviar solo el ID del usuario
         nota: nota,
         estado: "en preparación",
         aprobacion: true,
       };
-
+  
       // Imprimir el JSON que se enviará
       console.log("JSON a enviar:", JSON.stringify(dataToSend, null, 2));
-
+  
       // Configurar el encabezado de la solicitud con el token
+      const token = Cookies.get("token");
       const config = {
         headers: {
           Authorization: `Token ${token}`,
         },
       };
-
+  
       // Enviar los datos al servidor utilizando el método PUT y el token en el encabezado
       const response = await axios.put(
         `http://127.0.0.1:8000/api/solicitudes/${selectedSolicitud.id_solicitud}`,
         dataToSend,
         config
       );
-
+  
       this.toast.current.show({
         severity: "success",
         summary: "Autorización Exitosa",
         detail: "La solicitud se ha autorizado correctamente.",
         life: 3000,
       });
-
+  
       // Imprimir la respuesta del servidor en la consola
       console.log("Respuesta del servidor:", response.data);
-
+  
       // Actualizar el estado local excluyendo la solicitud modificada
       const updatedSolicitudes = this.state.solicitudes.map((solicitud) =>
         solicitud.id_solicitud === selectedSolicitud.id_solicitud
           ? { ...solicitud, ...dataToSend }
           : solicitud
       );
-
+  
       // Actualizar el estado y forzar la actualización del componente
       this.setState({ solicitudes: updatedSolicitudes }, () =>
         this.forceUpdate()
       );
-
+  
       // Opcional: Puedes realizar otras acciones después de enviar el formulario
-
+  
       // Cerrar el diálogo después de enviar el formulario
       this.hideDetailsDialog();
     } catch (error) {
       console.error("Error al enviar el formulario:", error);
     }
   };
+  
 
   enviarRechazo = async () => {
     try {
       const { selectedSolicitud, nota } = this.state;
-
-      // Verificar que haya una solicitud seleccionada
+  
+      // Verificar si hay una solicitud seleccionada
       if (!selectedSolicitud) {
-        console.error("No hay solicitud seleccionada para enviar.");
+        console.error("No hay solicitud seleccionada para completar");
         return;
       }
-
+  
       // Obtener el token de las cookies
       const token = Cookies.get("token");
-
-      // Verificar si el token está presente
-      if (!token) {
-        console.error("Token no encontrado en las cookies");
-        return;
-      }
-
-      // Construir el objeto de datos a enviar
-      const dataToSend = {
-        id_solicitud: selectedSolicitud.id_solicitud,
-        usuario: selectedSolicitud.usuario,
-        nota: nota,
-        estado: "Rechazado", // Estado "Rechazado" al presionar el botón de rechazo
-        aprobacion: false, // Establecer aprobación en false
-      };
-
-      // Imprimir el JSON que se enviará
-      console.log(
-        "JSON a enviar (Rechazo):",
-        JSON.stringify(dataToSend, null, 2)
-      );
-
+  
       // Configurar el encabezado de la solicitud con el token
       const config = {
         headers: {
           Authorization: `Token ${token}`,
         },
       };
-
-      // Enviar los datos al servidor utilizando el método PUT y el token en el encabezado
-      const response = await axios.put(
-        `http://127.0.0.1:8000/api/solicitudes/${selectedSolicitud.id_solicitud}`,
-        dataToSend,
+  
+      // Detalles de la solicitud a rechazar
+      const solicitudData = {
+        id_solicitud: selectedSolicitud.id_solicitud,
+        usuario: selectedSolicitud.usuario.id_user, // Supongo que el id del usuario solicitante está en usuario.id
+        estado: "Rechazado",
+        nota: nota, // Agregar la nota al cuerpo de la solicitud
+      };
+  
+      // Realizar la solicitud PUT
+      const completadaResponse = await axios.put(
+        `http://127.0.0.1:8000/api/solicitudes/${solicitudData.id_solicitud}`,
+        solicitudData,
         config
       );
-
+  
+      // Imprimir la información en la consola
+      console.log("Solicitud rechazada:", completadaResponse.data);
+  
+      // Puedes realizar alguna lógica adicional después de rechazar la solicitud si es necesario
+  
+      // Mostrar Toast de éxito
       this.toast.current.show({
-        severity: "error",
+        severity: "success",
         summary: "Rechazo Exitoso",
         detail: "La solicitud se ha rechazado correctamente.",
         life: 3000,
       });
-
-      // Imprimir la respuesta del servidor en la consola
-      console.log("Respuesta del servidor (Rechazo):", response.data);
-
-      // Actualizar el estado local excluyendo la solicitud rechazada
-      const updatedSolicitudes = this.state.solicitudes.filter(
-        (solicitud) => solicitud.id_solicitud !== selectedSolicitud.id_solicitud
-      );
-
-      // Actualizar el estado y forzar la actualización del componente
-      this.setState({ solicitudes: updatedSolicitudes }, () =>
-        this.forceUpdate()
-      );
-
-      // Opcional: Puedes realizar otras acciones después de enviar el formulario de rechazo
-
-      // Cerrar el diálogo después de enviar el formulario de rechazo
+  
+      // Actualizar la tabla después de rechazar la solicitud
+      this.componentDidMount();
+  
+      // Cerrar el diálogo después de rechazar la solicitud
       this.hideDetailsDialog();
     } catch (error) {
-      console.error("Error al enviar el formulario de rechazo:", error);
+      console.error("Error al rechazar la solicitud:", error);
     }
   };
+  
 
   checkAllButtonsActivated() {
     const { selectedSolicitud, rowStates } = this.state;
@@ -358,18 +333,17 @@ class RevisionTable extends Component {
           <Column field="fecha_creacion" header="Fecha de creación" />
           <Column field="fecha_entrega" header="Fecha de entrega" />
           <Column
-            field="estado"
-            header="Estado"
+            field="usuario"
+            header="Alumno"
+            sortable
             body={(rowData) => (
-              <span
-                className={`text-sm font-semibold ${this.getEstadoStyleClass(
-                  rowData.estado
-                )}`}
-              >
-                {rowData.estado}
+              <span>
+                {rowData.usuario.nombre} {rowData.usuario.apellido}
               </span>
             )}
-          />
+            filter
+            filterPlaceholder="Buscar Alumno"
+          ></Column>
           {/* Botón para ver detalles de la solicitud */}
           <Column
             body={(rowData) => (

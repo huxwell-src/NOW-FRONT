@@ -1,12 +1,12 @@
-import { Component } from "react";
+import React, { Component } from "react";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { Dialog } from "primereact/dialog";
 import { Button } from "primereact/button";
+import { InputTextarea } from "primereact/inputtextarea";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { getProducts } from "../../api/productService";
-import { InputTextarea } from "primereact/inputtextarea";
 
 class RevisionTable extends Component {
   constructor(props) {
@@ -16,10 +16,6 @@ class RevisionTable extends Component {
       products: [],
       visible: false,
       selectedSolicitud: null,
-      currentUser: null,
-      allButtonsActivated: false,
-      rowStates: {},
-      nota: "", // Nuevo estado para almacenar la nota
     };
   }
 
@@ -56,7 +52,7 @@ class RevisionTable extends Component {
 
       // Filtrar las solicitudes para mostrar solo las del usuario actual
       const solicitudesUsuarioActual = solicitudesResponse.data.filter(
-        (solicitud) => solicitud.profesor === currentUser.id_user
+        (solicitud) => solicitud.profesor.id_user === currentUser.id_user
       );
 
       // Filtrar las solicitudes para mostrar solo las que NO están en revisión
@@ -97,11 +93,7 @@ class RevisionTable extends Component {
 
   // Función para cerrar el diálogo de detalles
   hideDetailsDialog = () => {
-    this.setState({ visible: false, nota: "" });
-  };
-
-  handleNotaChange = (e) => {
-    this.setState({ nota: e.target.value });
+    this.setState({ visible: false });
   };
 
   // Función para obtener la clase de estilo CSS basada en el estado de la solicitud
@@ -126,96 +118,8 @@ class RevisionTable extends Component {
     return product ? product.nombre : "Producto no encontrado";
   }
 
-  getToggleButtonClass(isChecked) {
-    if (isChecked) {
-      // Clases para el botón activado
-      return "rounded-full border-none focus:shadow-sky-500! focus:shadow-none bg-sky-500 clases-para-botón-activado";
-    } else {
-      // Clases para el botón desactivado
-      return "rounded-full border-none focus:shadow-sky-500! focus:shadow-none clases-para-botón-desactivado";
-    }
-  }
-
-  enviarFormulario = async () => {
-    try {
-      const { selectedSolicitud, currentUser, nota, rowStates } = this.state;
-
-      // Verificar que haya una solicitud seleccionada
-      if (!selectedSolicitud) {
-        console.error("No hay solicitud seleccionada para enviar.");
-        return;
-      }
-
-      // Verificar que todos los ToggleButtons estén activados
-      const allButtonsActivated = selectedSolicitud.productos.every(
-        (producto) => rowStates[producto.id_producto]
-      );
-
-      if (!allButtonsActivated) {
-        console.error("No todos los ToggleButtons están activados.");
-        return;
-      }
-
-      // Obtener el token de las cookies
-      const token = Cookies.get("token");
-
-      // Verificar si el token está presente
-      if (!token) {
-        console.error("Token no encontrado en las cookies");
-        return;
-      }
-
-      // Construir el objeto de datos a enviar
-      const dataToSend = {
-        id_solicitud: selectedSolicitud.id_solicitud,
-        usuario: currentUser.id_user,
-        nota: nota,
-        estado: "en preparación", // Puedes ajustar el estado según tu lógica
-        aprobacion: true, // Establecer aprobación en true ya que todos los ToggleButtons están activados
-      };
-
-      // Imprimir el JSON que se enviará
-      console.log("JSON a enviar:", JSON.stringify(dataToSend, null, 2));
-
-      // Configurar el encabezado de la solicitud con el token
-      const config = {
-        headers: {
-          Authorization: `Token ${token}`,
-        },
-      };
-
-      // Enviar los datos al servidor utilizando el método PUT y el token en el encabezado
-      const response = await axios.put(
-        `http://127.0.0.1:8000/api/solicitudes/${selectedSolicitud.id_solicitud}`,
-        dataToSend,
-        config
-      );
-
-      // Imprimir la respuesta del servidor en la consola
-      console.log("Respuesta del servidor:", response.data);
-
-      // Opcional: Puedes realizar otras acciones después de enviar el formulario
-
-      // Cerrar el diálogo después de enviar el formulario
-      this.hideDetailsDialog();
-    } catch (error) {
-      console.error("Error al enviar el formulario:", error);
-    }
-  };
-
-  checkAllButtonsActivated() {
-    const { selectedSolicitud, rowStates } = this.state;
-    if (selectedSolicitud && selectedSolicitud.productos) {
-      const allButtonsActivated = selectedSolicitud.productos.every(
-        (producto) => rowStates[producto.id_producto]
-      );
-      this.setState({ allButtonsActivated });
-    }
-  }
-
   render() {
-    const { solicitudes, selectedSolicitud, visible } =
-      this.state;
+    const { solicitudes, selectedSolicitud, visible } = this.state;
 
     return (
       <>
@@ -225,8 +129,22 @@ class RevisionTable extends Component {
           emptyMessage="No hay solicitudes disponibles."
         >
           <Column field="id_solicitud" header="ID de solicitud" />
-          <Column field="usuario" header="Alumno" />
-          <Column field="aprobacion" header="Decisión" />
+          <Column
+            field="usuario"
+            header="Alumno"
+            body={(rowData) => (
+              <span>
+                {rowData.usuario.nombre} {rowData.usuario.apellido}
+              </span>
+            )}
+          />
+          <Column
+            field="aprobacion"
+            header="Decisión"
+            body={(rowData) => (
+              <span>{rowData.aprobacion ? "Aprobado" : "Rechazado"}</span>
+            )}
+          />
           <Column field="fecha_creacion" header="Fecha de creación" />
           <Column field="fecha_entrega" header="Fecha de entrega" />
           <Column
@@ -278,7 +196,6 @@ class RevisionTable extends Component {
               <>
                 <DataTable value={selectedSolicitud.productos}>
                   <Column field="id_producto" header="ID" />
-
                   <Column
                     field="nombre"
                     header="Nombre"

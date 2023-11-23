@@ -6,6 +6,9 @@ import Products from './Pages/Alumnos/Products'
 import Solicitudes from './Pages/Alumnos/Solictudes';
 import SolicitudesRevision from './Pages/Profesores/SolicitudesRevision';
 import SolicitudesHistorial from './Pages/Profesores/SolicitudesHistorial';
+import Preparacion from './Pages/Bodeguero/Preparacion';
+import Entrega from './Pages/Bodeguero/Entrega';
+import Pendientes from './Pages/Bodeguero/Pendientes';
 import Cookies from 'js-cookie';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 
@@ -25,6 +28,10 @@ const Router = () => {
 
         <Route path="/Revision" element={token ? <SolicitudesRevision /> : <Navigate to="/" />} />
         <Route path="/HistorialPrf" element={token ? <SolicitudesHistorial /> : <Navigate to="/" />} />
+
+        <Route path="/Preparacion" element={token ? <Preparacion /> : <Navigate to="/" />} />
+        <Route path="/Entrega" element={token ? <Entrega /> : <Navigate to="/" />} />
+        <Route path="/Pendientes" element={token ? <Pendientes /> : <Navigate to="/" />} />
       </Routes>
     </BrowserRouter>
   );

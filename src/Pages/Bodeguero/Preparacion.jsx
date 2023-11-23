@@ -1,22 +1,22 @@
 // Importación de bibliotecas y componentes
 import { Component } from 'react'
 import Layout from '../../components/Layout'
-import UserCrudTable from '../../components/Admin/UserCrudTable'
 import Header from '../../components/Header'
+import PreparacionTable from '../../components/Bodeguero/PreparacionTable';
 
 // Declaración de la clase del componente
-class TableProfesores extends Component {
+class Preparacion extends Component {
     render() {
  
         // Datos de la ruta para la navegación
         const routeData = [
             {
                 "id": 1,
-                "name": "Gestion de usuarios"
+                "name": "Gestion de solicitudes"
             },
             {
                 "id": 2,
-                "name": "Profesores",
+                "name": "Pendientes de entrega",
                 "hidden": true
             }
         ];
@@ -28,14 +28,15 @@ class TableProfesores extends Component {
                 <Layout />
 
                 {/* Componente de encabezado con título y datos de la ruta */}
-                <Header title="Gestion de profesores"  route={routeData} />
+                <Header title="Pendientes de entrega"  route={routeData} />
 
-                {/* Componente de tabla de usuarios con rol "Alumno" */}
-                <UserCrudTable userRole="Profesor" manyCarreras={false} />
+                <PreparacionTable></PreparacionTable>
+
+                
             </>
         )
     }
 }
 
 // Exportación del componente para su uso en otras partes de la aplicación
-export default TableProfesores
+export default Preparacion

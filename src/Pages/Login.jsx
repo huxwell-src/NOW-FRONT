@@ -2,9 +2,9 @@ import React, { Component } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { Navigate } from "react-router-dom";
-import { InputText } from "primereact/inputtext";
-import { Button } from "primereact/button";
 import { Link } from "react-router-dom";
+import Button from "../components/UI/Button";
+import InputText from "../components/UI/InputText";
 
 class Login extends Component {
   constructor(props) {
@@ -17,6 +17,7 @@ class Login extends Component {
       user: null,
       errorMessage: "",
       loggedIn: false,
+      loading: false, // Nuevo estado para indicar si la carga está en progreso
     };
   }
 
@@ -35,8 +36,17 @@ class Login extends Component {
     this.setState({ token: "", user: null });
   };
 
+  handleCheckboxChange = () => {
+    this.setState((prevState) => ({
+      rememberMe: !prevState.rememberMe,
+    }));
+  };
+
   handleLogin = async (e) => {
     e.preventDefault();
+
+    // Establecer el estado de carga a true
+    this.setState({ loading: true });
 
     const loginData = {
       email: this.state.email,
@@ -68,6 +78,9 @@ class Login extends Component {
       } else {
         console.error("Error de inicio de sesión:", error);
       }
+    } finally {
+      // Establecer el estado de carga a false, independientemente del resultado
+      this.setState({ loading: false });
     }
   };
 
@@ -76,74 +89,78 @@ class Login extends Component {
       return <Navigate to="/dashboard" />;
     }
     return (
-      <div className="min-h-[100dvh] flex items-center justify-center sm:bg-[#0ea5e9]/80 duration-200">
-        <div className="bg-white p-6 rounded-xl sm:shadow-lg w-screen sm:w-auto">
-          <div className="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
-            <div className="sm:mx-auto sm:w-full sm:max-w-sm">
-              <img
-                className="mx-auto h-24 w-auto"
-                src="https://i.ibb.co/j3dmr5L/logo-white.jpg"
-                alt="Your Company"
-              />
-              <h2 className="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
-                Iniciar Sesion
-              </h2>
-            </div>
-
-            <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-              {this.state.errorMessage && (
-                <p className="text-red-500 font-medium text-sm mb-4">
-                  {this.state.errorMessage}
-                </p>
-              )}
-
-              <form className="space-y-6" onSubmit={this.handleLogin}>
-                <div>
-                  <label className="block text-sm font-medium leading-6 text-gray-900">
-                    Email
-                  </label>
-                  <div className="mt-2">
-                    <InputText
-                      type="email"
-                      required
-                      onChange={(e) => this.setState({ email: e.target.value })}
-                      className="input"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium leading-6 text-gray-900">
-                    Contraseña
-                  </label>
-                  <div className="mt-2">
-                    <InputText
-                      type="password"
-                      onChange={(e) =>
-                        this.setState({ password: e.target.value })
-                      }
-                      className="input"
-                    />
-                  </div>
-                </div>
-
-                <Link>
-                  <br />
-                  <span className="block text-sky-500 hover:underline  ">Olvide mi contraseña</span>
-                </Link>
-
-                <div className="w-full flex justify-end">
-                  <Button
-                    type="submit"
-                    label="Ingresar"
-                    rounded
-                    raised
-                  />
-                </div>
-              </form>
+      <div className="min-h-[100dvh] flex items-center justify-center duration-200 bg-white sm:bg-slate-100  dark:bg-slate-950 ">
+        {this.state.loading && (
+          <div id="loading-container">
+            <div id="loading-dots">
+              <div className="loading-dot"></div>
+              <div className="loading-dot"></div>
+              <div className="loading-dot"></div>
             </div>
           </div>
-        </div>
+        )}
+
+        {!this.state.loading && (
+          <div className="bg-white p-2 rounded-xl sm:shadow-custom w-screen sm:w-auto">
+            <div className="flex min-h-full flex-col justify-center px-2 py-12 sm:px-8">
+              <div className="sm:mx-auto flex justify-center items-center sm:w-full sm:max-w-sm">
+                <img
+                  className="h-12 "
+                  src="https://i.ibb.co/j3dmr5L/logo-white.jpg"
+                  alt="Your Company"
+                />
+                <span className="text-4xl font-bold text-gray-800 ml-4 ">
+                  NOW
+                </span>
+              </div>
+
+              <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
+                {this.state.errorMessage && (
+                  <p className="text-red-500 font-medium text-sm mb-4">
+                    {this.state.errorMessage}
+                  </p>
+                )}
+
+                <form className="space-y-6" onSubmit={this.handleLogin}>
+                  <InputText
+                    label="Email"
+                    type="email"
+                    onChange={(e) => this.setState({ email: e.target.value })}
+                    placeholder="Tu email"
+                  />
+
+                  <InputText
+                    label="Contraseña"
+                    type="password"
+                    onChange={(e) =>
+                      this.setState({ password: e.target.value })
+                    }
+                    placeholder="Tu contraseña"
+                  />
+
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      className="form-checkbox cursor-pointer h-4 w-4 accent-primary-500 duration-150"
+                      checked={this.state.rememberMe}
+                      onChange={this.handleCheckboxChange}
+                      name=""
+                      id=""
+                    />
+                    <span className="ml-1"> Recuérdame</span>
+                  </div>
+                  <Button label="Ingresar" type="submit" full />
+                </form>
+
+                <Link>
+                  <span className="block hover:underline w-full text-center mt-4 cursor-pointer ">
+                    ¿Olvidaste tu contraseña?
+                  </span>
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }

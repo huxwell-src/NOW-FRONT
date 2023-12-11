@@ -45,14 +45,14 @@ class Dashboard extends Component {
     return (
       <>
         <Layout nombre={<p>¡Bienvenido/a, {user.nombre} {user.apellido}!</p>} />
-        <div className="text-center mt-[68px]">
-          <p className="text-xl font-semibold mb-2">¡Bienvenido, {user.nombre} {user.apellido}!</p>
-          <p className="mb-2">{user.id_user}</p>
-          <p className="mb-2">{user.rut}</p>
-          <p className="mb-2">{user.email}</p>
-          <p className="mb-2">{user.rol}</p>
-          <p className="mb-2">{user.carrera.map(carrera => carrera.nombre).join(', ')}</p>
-          <p className="mb-2">{user.curso}</p>
+        <div className="ml-10 mt-24">
+          
+          <p className="text-4xl font-bold text-sky-700 mb-2">¡Bienvenido, {user.rol} {user.nombre} {user.apellido}!</p>
+          <p className="mb-2">ID: {user.id_user}</p>
+          <p className="mb-2">Rut: {user.rut}</p>
+          <p className="mb-2">Email: {user.email}</p>
+          <p className="mb-2">Carrera: {user.carrera.map(carrera => carrera.nombre).join(', ')}</p>
+          <p className="mb-2">Curso: {user.curso}</p>
         </div>
       </>
     );

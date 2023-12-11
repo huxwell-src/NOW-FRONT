@@ -6,6 +6,7 @@ import { Button } from "primereact/button";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { InputTextarea } from "primereact/inputtextarea";
+import { Toast } from "primereact/toast";
 
 class PendientesTable extends Component {
   constructor(props) {
@@ -17,37 +18,38 @@ class PendientesTable extends Component {
       notaDialogVisible: false, // Nuevo estado para controlar la visibilidad del diálogo de la nota
       nota: "", // Nuevo estado para almacenar el contenido de la nota
     };
+    this.toast = React.createRef(); // Referencia al componente Toast
   }
 
   async componentDidMount() {
     try {
       // Obtener el token de las cookies
       const token = Cookies.get("token");
-  
+
       // Verificar si el token está presente
       if (!token) {
         console.error("Token no encontrado en las cookies");
         return;
       }
-  
+
       // Configurar el encabezado de la solicitud con el token
       const config = {
         headers: {
           Authorization: `Token ${token}`,
         },
       };
-  
+
       // Obtener todas las solicitudes desde el endpoint
       const solicitudesResponse = await axios.get(
         "http://127.0.0.1:8000/api/solicitudes",
         config
       );
-  
+
       // Filtrar las solicitudes con estado "aprobado"
       const solicitudesAprobadas = solicitudesResponse.data.filter(
         (solicitud) => solicitud.estado === "Entregado"
       );
-  
+
       // Establecer el estado del componente con las solicitudes aprobadas
       this.setState({
         solicitudes: solicitudesAprobadas,
@@ -56,7 +58,6 @@ class PendientesTable extends Component {
       console.error("Error al obtener las solicitudes:", error);
     }
   }
-  
 
   showDetailsDialog = (rowData) => {
     this.setState({ visible: true, selectedSolicitud: rowData });
@@ -82,23 +83,23 @@ class PendientesTable extends Component {
   handleCompletada = async () => {
     try {
       const { selectedSolicitud, nota } = this.state;
-  
+
       // Verificar si hay una solicitud seleccionada
       if (!selectedSolicitud) {
         console.error("No hay solicitud seleccionada para completar");
         return;
       }
-  
+
       // Obtener el token de las cookies
       const token = Cookies.get("token");
-  
+
       // Configurar el encabezado de la solicitud con el token
       const config = {
         headers: {
           Authorization: `Token ${token}`,
         },
       };
-  
+
       // Detalles de la solicitud a completar
       const solicitudData = {
         id_solicitud: selectedSolicitud.id_solicitud,
@@ -106,21 +107,21 @@ class PendientesTable extends Component {
         estado: "Completado",
         nota: nota, // Agregar la nota al cuerpo de la solicitud
       };
-  
+
       // Realizar la solicitud PUT
       const completadaResponse = await axios.put(
         `http://127.0.0.1:8000/api/solicitudes/${solicitudData.id_solicitud}`,
         solicitudData,
         config
       );
-  
+
       // Imprimir la información en la consola
       console.log("Solicitud completada:", completadaResponse.data);
 
       this.componentDidMount();
-  
+
       // Puedes realizar alguna lógica adicional después de completar la solicitud si es necesario
-  
+
       // Cerrar el diálogo después de completar la solicitud
       this.hideDetailsDialog();
     } catch (error) {
@@ -131,65 +132,70 @@ class PendientesTable extends Component {
   handleGuardar = async () => {
     try {
       const { selectedSolicitud, nota } = this.state;
-  
+
       // Verificar si hay una solicitud seleccionada
       if (!selectedSolicitud) {
         console.error("No hay solicitud seleccionada para reportar");
         return;
       }
-  
+
       // Obtener el token de las cookies
       const token = Cookies.get("token");
-  
+
       // Configurar el encabezado de la solicitud con el token
       const config = {
         headers: {
           Authorization: `Token ${token}`,
         },
       };
-  
+
       // Detalles de la solicitud a reportar
       const solicitudData = {
         id_solicitud: selectedSolicitud.id_solicitud,
         usuario: selectedSolicitud.usuario.id_user,
-        estado: "Reportado",
+        estado: "reportado",
         nota: nota,
       };
-  
+
       // Realizar la solicitud PUT
       const reportadoResponse = await axios.put(
         `http://127.0.0.1:8000/api/solicitudes/${solicitudData.id_solicitud}`,
         solicitudData,
         config
       );
-  
+
+      // Mostrar el toast de éxito
+      this.toast.current.show({
+        severity: "success",
+        summary: "Éxito",
+        detail: "Reporte guardado exitosamente",
+      });
+
       // Imprimir la información en la consola
       console.log("Solicitud reportada:", reportadoResponse.data);
-  
+
       // Puedes realizar alguna lógica adicional después de reportar la solicitud si es necesario
-  
+
       // Cerrar el diálogo después de reportar la solicitud
+      this.hideDetailsDialog();
       this.hideNotaDialog();
     } catch (error) {
       console.error("Error al reportar la solicitud:", error);
     }
   };
-  
-  
 
   // Método para mostrar el diálogo de la nota
   showNotaDialog = () => {
     this.setState({ notaDialogVisible: true });
   };
 
-  // Método para ocultar el diálogo de la nota
   hideNotaDialog = () => {
     this.setState({ notaDialogVisible: false });
   };
 
   render() {
-    const { solicitudes, selectedSolicitud, visible, notaDialogVisible, nota } = this.state;
-    
+    const { solicitudes, selectedSolicitud, visible, notaDialogVisible, nota } =
+      this.state;
 
     const footerContent = (
       <div>
@@ -216,6 +222,7 @@ class PendientesTable extends Component {
 
     return (
       <>
+        <Toast ref={this.toast} />
         {/* Tabla de todas las solicitudes */}
         <DataTable
           value={solicitudes}
@@ -315,7 +322,6 @@ class PendientesTable extends Component {
                     text
                     rounded
                     onClick={this.showNotaDialog}
-
                   />
                 </div>
               </div>

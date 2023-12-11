@@ -102,6 +102,7 @@ class RevisionTable extends Component {
   // Función para cerrar el diálogo de detalles
   hideDetailsDialog = () => {
     this.setState({ visible: false, nota: "" });
+    this.componentDidMount()
   };
 
   handleNotaChange = (e) => {

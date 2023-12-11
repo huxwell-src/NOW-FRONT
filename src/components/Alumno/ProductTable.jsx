@@ -10,7 +10,8 @@ import { Dropdown } from "primereact/dropdown";
 import Header from "../Header";
 import { getUserData } from "../../api/userService";
 import { Toast } from "primereact/toast";
-import { Divider } from "primereact/divider";
+import { Tag } from "primereact/tag";
+import { classNames } from "primereact/utils";
 
 class ProductTable extends Component {
   constructor(props) {
@@ -77,9 +78,16 @@ class ProductTable extends Component {
     } else {
       updatedCart.push({ ...product, quantity: 1 });
     }
+
+    // Calcular la cantidad total de productos en el carrito
+    const totalQuantity = updatedCart.reduce(
+      (total, item) => total + item.quantity,
+      0
+    );
+
     this.setState({
       cart: updatedCart,
-      badgeValue: updatedCart.length,
+      badgeValue: totalQuantity,
     });
   };
 
@@ -94,9 +102,16 @@ class ProductTable extends Component {
       } else {
         updatedCart.splice(index, 1);
       }
+
+      // Calcular la cantidad total de productos en el carrito
+      const totalQuantity = updatedCart.reduce(
+        (total, item) => total + item.quantity,
+        0
+      );
+
       this.setState({
         cart: updatedCart,
-        badgeValue: updatedCart.length,
+        badgeValue: totalQuantity,
       });
     }
   };
@@ -109,9 +124,9 @@ class ProductTable extends Component {
         // Obtener datos del usuario
         const userData = await getUserData(token);
 
-        // Validations
+        // Validaciones
         if (!this.state.selectedProfesor) {
-          // Show an error toast or handle the error accordingly
+          // Mostrar un toast de error o manejar el error según sea necesario
           this.toast.current.show({
             severity: "error",
             summary: "Error",
@@ -119,6 +134,29 @@ class ProductTable extends Component {
             life: 3000,
           });
           return;
+        }
+
+        // Validar disponibilidad antes de enviar la solicitud
+        for (const item of this.state.cart) {
+          const productDetails = await axios.get(
+            `http://127.0.0.1:8000/api/productos/${item.id_producto}`,
+            {
+              headers: {
+                Authorization: `Token ${token}`,
+              },
+            }
+          );
+
+          if (item.quantity > productDetails.data.disponibilidad) {
+            // Mostrar un toast de error o manejar el error según sea necesario
+            this.toast.current.show({
+              severity: "error",
+              summary: "Error",
+              detail: `La cantidad solicitada de ${productDetails.data.nombre} es mayor a lo disponible.`,
+              life: 3000,
+            });
+            return;
+          }
         }
 
         // Calculate fechaEntrega with at least 14 days from today
@@ -182,6 +220,38 @@ class ProductTable extends Component {
           }
         );
 
+        // Update disponibilidad for each product
+        for (const product of productosDuplicados) {
+          const productDetails = await axios.get(
+            `http://127.0.0.1:8000/api/productos/${product.id_producto}`,
+            {
+              headers: {
+                Authorization: `Token ${token}`,
+              },
+            }
+          );
+
+          const updatedDisponibilidad =
+            productDetails.data.disponibilidad - product.cantidad;
+
+          // Update product with new disponibilidad using PUT
+          await axios.put(
+            `http://127.0.0.1:8000/api/productos/${product.id_producto}`,
+            {
+              ...productDetails.data,
+              disponibilidad: updatedDisponibilidad,
+            },
+            {
+              headers: {
+                Authorization: `Token ${token}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+        }
+
+        this.componentDidMount();
+
         // Manejar la respuesta según sea necesario
         console.log("Respuesta del servidor:", response.data);
       } catch (error) {
@@ -189,6 +259,13 @@ class ProductTable extends Component {
         console.error("Error al obtener datos del usuario:", error);
       }
     }
+  };
+
+  calculateAvailabilityPercentage = (disponibilidad, stock) => {
+    if (stock === 0) {
+      return 0; // Evitar la división por cero
+    }
+    return ((disponibilidad / stock) * 100).toFixed(2);
   };
 
   render() {
@@ -243,14 +320,58 @@ class ProductTable extends Component {
           tableStyle={{ minWidth: "50rem" }}
           frozenWidth="200px"
           scrollable
+          className=""
           scrollHeight={scrollHeight}
           paginator
           rows={25}
           rowsPerPageOptions={[25, 50, 100, 200]}
         >
-          <Column field="nombre"  header="Nombre" />
+          <Column field="nombre" header="Nombre" />
           <Column field="descripcion" header="Descripción" />
-          <Column field="stock" header="stock" />
+          <Column
+            field="disponibilidad"
+            header="Disponible"
+            body={(rowData) => {
+              const percentage = this.calculateAvailabilityPercentage(
+                rowData.disponibilidad,
+                rowData.stock
+              );
+              let tagClass, labelText, iconClass, className;
+
+              if (percentage > 75) {
+                tagClass = "success";
+                labelText = "Alta";
+                iconClass = "pi pi-check";
+              } else if (percentage >= 50) {
+                tagClass = "warning";
+                labelText = "Media";
+                iconClass = "pi pi-exclamation-triangle";
+                
+              } else if (percentage >= 25) {
+                tagClass = "warning";
+                labelText = "Media-Baja";
+                iconClass = "pi pi-exclamation-triangle";
+              } else if (percentage >= 1) {
+                tagClass = "warning";
+                labelText = "Media-Baja";
+                iconClass = "pi pi-exclamation-triangle";
+              } else {
+                tagClass = "";
+                className="!bg-gray-400"
+                labelText = "Sin stock";
+                iconClass = "pi pi-times ";
+              }
+
+              return (
+                <div>
+                  <Tag severity={tagClass} className={className} icon={iconClass}>
+                    {labelText}
+                  </Tag>
+                </div>
+              );
+            }}
+          />
+
           <Column frozen alignFrozen="right" body={this.addToCartTemplate} />
         </DataTable>
         <Toast ref={this.toast} />
@@ -292,9 +413,11 @@ class ProductTable extends Component {
         rounded
         size="large"
         onClick={() => this.addToCart(rowData)}
+        disabled={rowData.disponibilidad === 0} // Deshabilita el botón si la disponibilidad es 0
       />
     </div>
   );
+  
 
   removeFromCartTemplate = (rowData) => (
     <div className="flex  gap-1 ">

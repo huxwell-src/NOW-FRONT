@@ -2,6 +2,7 @@ import Login from './Pages/Login'
 import Dashboard from './Pages/Dashboard'
 import TableAlumnos from './Pages/Admin/AlumnosCrudTables';
 import TableProfesores from './Pages/Admin/ProfesoresCrudTable';
+import TableProducts from './Pages/Admin/ProductCrudTable';
 import Products from './Pages/Alumnos/Products'
 import Solicitudes from './Pages/Alumnos/Solictudes';
 import SolicitudesRevision from './Pages/Profesores/SolicitudesRevision';
@@ -22,6 +23,7 @@ const Router = () => {
         
         <Route path="/Alumnos" element={token ? <TableAlumnos /> : <Navigate to="/" />} />
         <Route path="/Profesores" element={token ? <TableProfesores /> : <Navigate to="/" />} />
+        <Route path="/Products" element={token ? <TableProducts /> : <Navigate to="/" />} />
 
         <Route path="/Productos" element={token ? <Products /> : <Navigate to="/" />} />
         <Route path="/Solicitudes" element={token ? <Solicitudes /> : <Navigate to="/" />} />

@@ -58,6 +58,7 @@ class Layout extends Component {
       { label: "Inicio", url: "/dashboard", icon: faHouse },
       { label: "Alumnos", url: "/Alumnos", icon: faGraduationCap },
       { label: "Profesores", url: "/Profesores", icon: faChalkboardUser },
+      { label: "Productos", url: "/Products", icon: faChalkboardUser },
     ];
 
     const menuDataAlumno = [
@@ -113,6 +114,7 @@ class Layout extends Component {
 
     return (
       <>
+        {/** */}
         <nav className="bg-sky-500 p-4 fixed w-full z-50">
           <div className="mx-auto">
             <div className="flex items-center justify-between">
@@ -138,6 +140,10 @@ class Layout extends Component {
             </div>
           </div>
         </nav>
+
+        
+
+
         <div className="card flex justify-content-center">
           <Sidebar
             header={header}

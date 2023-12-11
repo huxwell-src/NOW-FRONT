@@ -11,6 +11,7 @@ import Preparacion from './Pages/Bodeguero/Preparacion';
 import Entrega from './Pages/Bodeguero/Entrega';
 import Pendientes from './Pages/Bodeguero/Pendientes';
 import Cookies from 'js-cookie';
+import NotFound from './Pages/NotFound';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 
 const Router = () => {
@@ -18,6 +19,8 @@ const Router = () => {
   return (
     <BrowserRouter>
       <Routes>
+      <Route path="*" element={<NotFound />} />
+
         <Route path="/" element={!token ? <Login /> : <Navigate to="/dashboard" />} />
         <Route path="/dashboard" element={token ? <Dashboard /> : <Navigate to="/" />} />
         

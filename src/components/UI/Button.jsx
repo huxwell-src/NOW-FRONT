@@ -2,7 +2,7 @@ import React from 'react';
 
 const Button = ({ label, onClick, className, type, disabled, color = 'primary', size = 'md', full, pill }) => {
   const classes = {
-    base: 'focus:outline-none rounded-xl transition ease-in-out duration-200 hover:shadow focus:shadow-sm ',
+    base: 'focus:outline-none rounded-xl w-fit	 transition ease-in-out duration-200 hover:shadow focus:shadow-sm ',
     disabled: 'opacity-50 cursor-not-allowed',
     full: 'w-full',
     pill: 'rounded-full',

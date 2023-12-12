@@ -10,13 +10,14 @@ import {
   faArrowRight,
 } from "@fortawesome/free-solid-svg-icons";
 import { getUserToken } from "../api/userService";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 const SidebarContext = createContext();
 export function Sidebar({ children }) {
   const [user, setUser] = useState(null);
   const [userRole, setUserRole] = useState(null);
   const [expanded, setExpanded] = useState(true);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -109,10 +110,25 @@ export function Sidebar({ children }) {
                         {user.email}
                       </span>
                     </div>
-                    <FontAwesomeIcon
-                      className="p-1.5 rounded-lg bg-gray-50 hover:bg-gray-100 text-xl"
-                      icon={faEllipsisVertical}
-                    />
+                    <div className="flex items-center">
+                      <div className="relative">
+                        <button className="focus:outline-none">
+                          <FontAwesomeIcon
+                            className="p-1.5 rounded-lg bg-gray-50 hover:bg-gray-100 text-xl"
+                            icon={faEllipsisVertical}
+                          />
+                        </button>
+                        <div className="absolute top-0 left-12 z-50 mt-2 w-32 overflow-hidden rounded-md bg-white shadow-custom">
+                          <a
+                            href="#"
+                            className="block border-b px-4 py-2 text-sm text-gray-800 hover:bg-gray-200"
+                          >
+                            Lorem ipsum dolor, sit amet consectetur adipisicing
+                            elit. Animi laboriosam pariatur fugia.
+                          </a>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </>
@@ -129,36 +145,35 @@ export function Sidebar({ children }) {
 
 export function SidebarItem() {
   const { expanded } = useContext(SidebarContext);
+  const location = useLocation();
+
   const menuDataAdmin = [
     {
       label: "Inicio",
       url: "/dashboard",
       icon: faHouse,
-      active: false,
-      alert: true,
+      alert: false,
     },
     {
       label: "Alumnos",
       url: "/Alumnos",
       icon: faGraduationCap,
-      active: true,
       alert: false,
     },
     {
       label: "Profesores",
       url: "/Profesores",
       icon: faChalkboardUser,
-      active: false,
-      alert: true,
+      alert: false,
     },
     {
       label: "Productos",
       url: "/Products",
       icon: faChalkboardUser,
-      active: false,
       alert: false,
     },
   ];
+
   return (
     <>
       {menuDataAdmin.map((item, index) => (
@@ -166,7 +181,7 @@ export function SidebarItem() {
           <li
             className={`relative flex items-center py-2 px-3 my-1 font-medium rounded-md cursor-pointer transition-colors
             ${
-              item.active
+              location.pathname === item.url
                 ? "bg-primary-200/70 text-primary-600"
                 : "hover:bg-primary-100/60 text-primary-900 "
             }`}

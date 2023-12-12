@@ -5,7 +5,7 @@ import { Button } from 'primereact/button';
 const Header = ({ title, route, buttonConfig, children }) => {
 
     return (
-        <div className="bg-slate-50 px-5 py-4 mt-[68px] ">
+        <div className="bg-slate-50 px-5 py-4  ">mt-[68px]
 
             <ul className="list-none p-0 m-0 flex align-items-center font-medium mb-3">
 

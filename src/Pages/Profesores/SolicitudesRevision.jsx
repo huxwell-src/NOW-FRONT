@@ -1,5 +1,4 @@
 import { Component } from 'react';
-import Layout from '../../components/Layout';
 import Header from '../../components/Header';
 import RevisionTable from '../../components/Profesores/RevisionTable';
 class SolicitudesRevision extends Component {
@@ -20,7 +19,6 @@ class SolicitudesRevision extends Component {
 
     return (
       <>
-        <Layout />
         <Header title="Revision Solicitudes"  route={routeData} />
         <RevisionTable/>
       </>

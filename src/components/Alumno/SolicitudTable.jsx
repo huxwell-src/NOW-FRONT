@@ -1,15 +1,11 @@
-import React, { Component } from "react";
+import { Component } from "react";
 import { getUserData } from "../../api/userService";
 import { getProducts } from "../../api/productService";
-import { DataTable } from "primereact/datatable";
-import { Column } from "primereact/column";
-import { Button } from "primereact/button";
-import { Dialog } from "primereact/dialog";
-import { Tag } from "primereact/tag";
-import { Dropdown } from "primereact/dropdown";
+import Tag from "../UI/Tag";
 import axios from "axios";
 import Cookies from "js-cookie";
-import { InputTextarea } from "primereact/inputtextarea";
+import Header from "../UI/Header";
+import Table from "../UI/Table";
 
 class SolicitudTable extends Component {
   constructor(props) {
@@ -21,6 +17,8 @@ class SolicitudTable extends Component {
       visible: false,
       selectedSolicitud: null,
       globalFilter: "",
+      selectedRow: null,
+      selectedNote: "",
       statuses: ["En Preparación", "En Revisión", "Rechazado"],
     };
   }
@@ -66,19 +64,29 @@ class SolicitudTable extends Component {
 
   getEstadoStyleClass(estado) {
     switch (estado) {
-      case "en revisión":
+      case "En Revisión":
         return "warning";
       case "Rechazado":
         return "danger";
-      case "en preparación":
+      case "En Preparación":
         return "success";
       default:
-        return "text-gray-800 ";
+        return "text-gray-800";
     }
   }
 
+  handleRowSelect = (selectedRows) => {
+    if (selectedRows && selectedRows.length > 0) {
+      const selectedRow = selectedRows[0];
+      this.setState({
+        selectedRow: selectedRow,
+        selectedNote: selectedRow.nota,
+      });
+    }
+  };
+
   render() {
-    const { user, profesoresData, selectedSolicitud, statuses } = this.state;
+    const { user, profesoresData, selectedRow, selectedNote } = this.state;
 
     if (!user || !user.solicitudes || user.solicitudes.length === 0) {
       return null;
@@ -104,168 +112,186 @@ class SolicitudTable extends Component {
       };
     });
 
-    const getSeverity = (status) => {
-      switch (status) {
-        case "Rechazado":
-          return "danger";
+    const getColor = (estado) => {
+      switch (estado) {
+        case "reportado":
+        case "rechazado":
+          return "red";
 
-        case "Atrasado":
-          return "danger";
+        case "en revisión":
+          return "yellow";
 
-        case "En Preparación":
-          return "success";
+        case "Completado":
+          return "green";
 
-        case "En Revisión":
-          return "warning";
-
-        case "renewal":
+        default:
           return null;
       }
     };
 
-    const statusItemTemplate = (option) => {
-      return <Tag value={option} severity={getSeverity(option)} />;
-    };
+    const columnsToShow = [
+      {
+        name: "ID de Solicitud",
+        content: (row) => (
+          <div>
+            <div className="m-0 text-base leading-6">{row.id_solicitud}</div>
+          </div>
+        ),
+      },
+      {
+        name: "Fecha de Creación",
+        content: (row) => (
+          <div>
+            <div className="m-0 text-base leading-6">
+              {new Date(row.fecha_creacion).toLocaleDateString("es-ES")}
+            </div>
+          </div>
+        ),
+      },
+      {
+        name: "Fecha de Entrega",
+        content: (row) => (
+          <div>
+            <div className="m-0 text-base leading-6">
+              {new Date(row.fecha_entrega).toLocaleDateString("es-ES")}
+            </div>
+          </div>
+        ),
+      },
+      {
+        name: "Entrega",
+        content: (row) => {
+          const fechaEntrega = new Date(row.fecha_entrega);
+          const hoy = new Date();
+          const timeDifference = fechaEntrega.getTime() - hoy.getTime();
+          const diasFaltantes = Math.floor(
+            timeDifference / (1000 * 60 * 60 * 24)
+          );
 
-    const statusFilterTemplate = (options) => {
-      return (
-        <Dropdown
-          value={options.value}
-          options={statuses}
-          onChange={(e) => options.filterCallback(e.value)}
-          itemTemplate={statusItemTemplate}
-          placeholder="Seleccionar estado"
-          className="p-column-filter"
-          showClear
-          style={{ minWidth: "12rem" }}
-        />
-      );
-    };
+          let message = "";
+
+          if (
+            row.estado === "Completado" ||
+            row.estado === "reportado" ||
+            row.estado === "Rechazado"
+          ) {
+            message = "-";
+          } else if (diasFaltantes > 0) {
+            message = `En ${diasFaltantes} día${
+              diasFaltantes !== 1 ? "s" : ""
+            }`;
+          } else if (diasFaltantes === 0) {
+            message = "Hoy";
+          } else {
+            message = `Hace ${Math.abs(diasFaltantes)} día${
+              Math.abs(diasFaltantes) !== 1 ? "s" : ""
+            } de atraso`;
+          }
+
+          return (
+            <div>
+              <div className="m-0 text-base leading-6">{message}</div>
+            </div>
+          );
+        },
+      },
+      {
+        name: "Estado",
+        content: (row) => (
+          <div className="flex flex-col">
+            <Tag color={getColor(row.estado)}> {row.estado} </Tag>
+          </div>
+        ),
+      },
+      {
+        name: "Profesor",
+        content: (row) => (
+          <div>
+            <div className="m-0 text-base leading-6">
+              {row.profesor.nombre} {row.profesor.apellido}
+            </div>
+          </div>
+        ),
+      },
+      {
+        name: "Nota",
+        content: (row) => (
+          <div>
+            <div className="m-0 text-base leading-6">{row.nota}</div>
+          </div>
+        ),
+      },
+    ];
+
+    const columnsToShowSecondTable = [
+      { name: "ID", content: (row) => row.id_producto },
+      { name: "Nombre", content: (row) => row.nombre },
+      { name: "Cantidad", content: (row) => row.cantidad },
+      { name: "Nota", content: (row) => row.nota || "No hay notas" },
+    ];
 
     return (
       <>
-        <DataTable
-          value={solicitudes}
-          removableSort
-          filterDisplay="row"
-          emptyMessage="No hay solicitudes disponibles."
-          paginator
-          rows={10}
-          sortOrder={-1}
-          sortField="id_solicitud"
-          rowsPerPageOptions={[10, 15, 25, 50]}
-          tableStyle={{ minWidth: "50rem" }}
-        >
-          <Column
-            field="id_solicitud"
-            sortable
-            header="ID de solicitud"
-            filter
-            filterPlaceholder="Buscar ID"
-          ></Column>
-          <Column
-            field="fecha_creacion"
-            sortable
-            header="Fecha de creación"
-            filter
-            filterPlaceholder="Buscar fecha"
-          ></Column>
-          <Column
-            field="fecha_entrega"
-            sortable
-            header="Fecha de entrega"
-            filter
-            filterPlaceholder="Buscar fecha"
-          ></Column>
-          <Column
-            field="estado"
-            header="Estado"
-            sortable
-            showFilterMenu={false}
-            filterMenuStyle={{ width: "14rem" }}
-            filterElement={statusFilterTemplate}
-            filter
-            filterPlaceholder="Buscar estado"
-            body={(rowData) => (
-              <span className="text-sm font-semibold">
-                <Tag
-                  value={rowData.estado}
-                  className="capitalize"
-                  severity={this.getEstadoStyleClass(rowData.estado)}
-                />
-              </span>
-            )}
-          ></Column>
-          <Column
-            field="profesor"
-            header="Profesor"
-            sortable
-            body={(rowData) => (
-              <span>
-                {rowData.profesor.nombre} {rowData.profesor.apellido}
-              </span>
-            )}
-            filter
-            filterPlaceholder="Buscar profesor"
-          ></Column>
-
-          <Column
-            body={(rowData) => (
-              <Button
-                size="small"
-                sortable
-                rounded
-                text
-                icon="pi pi-chevron-right"
-                iconPos="right"
-                label="Ver Detalles"
-                className="text-sky-500"
-                onClick={() =>
-                  this.setState({ visible: true, selectedSolicitud: rowData })
-                }
+        <Header
+          title="Mis Solicitudes"
+          subtitle="Mis solicitudes"
+          imageUrl="https://modernize-react.adminmart.com/assets/ChatBc-d3c45db6.png"
+        />
+        <div className="flex">
+          <div className="m-4 w-3/5 rounded-xl shadow-custom bg-white">
+            <div className="w-full border border-b rounded-t-xl">
+              <h3 className="p-4 text-xl font-medium text-slate-800">
+                Productos
+              </h3>
+            </div>
+            <div className="p-4">
+              <Table
+                columns={columnsToShow}
+                data={solicitudes}
+                paginator
+                onRowSelect={this.handleRowSelect}
               />
-            )}
-          ></Column>
-        </DataTable>
+            </div>
+          </div>
 
-        {/* Dialog */}
-        {/* Dialog */}
-        <Dialog
-          header="Detalles"
-          modal
-          breakpoints={{ "960px": "75vw", "641px": "100vw" }}
-          style={{ width: "50vw" }}
-          visible={this.state.visible}
-          onHide={() => this.setState({ visible: false })}
-        >
-          {selectedSolicitud &&
-            selectedSolicitud.productos &&
-            selectedSolicitud.productos.length > 0 && (
-              <DataTable value={selectedSolicitud.productos}>
-                <Column field="id_producto" header="ID"></Column>
-                <Column field="nombre" header="Nombre"></Column>
-                <Column field="cantidad" header="Cantidad"></Column>
-              </DataTable>
-            )}
-          {/* Nota de la solicitud */}
-          {selectedSolicitud &&
-            selectedSolicitud.estado === "Listo para retiro" && (
-              <div className="my-4">
-                <h2 className="text-lg font-semibold">Nota del profesor:</h2>
-                <InputTextarea
-                  rows={2}
-                  className="w-full"
-                  disabled
-                  value={selectedSolicitud.nota || "No hay notas"}
-                  style={{
-                    backgroundColor: selectedSolicitud.nota
-                      ? "#fff"
-                      : "#f0f0f0",
-                  }}
+          <div className="m-4 w-2/5 rounded-xl shadow-custom bg-white">
+            <div className="w-full border border-b rounded-t-xl">
+              <h3 className="p-4 text-2xl font-medium text-slate-800">
+                Carrito
+              </h3>
+            </div>
+            <div className="p-4">
+              {selectedNote && (
+                <div className="my-4">
+                  <h2 className="text-lg font-semibold">Nota del profesor:</h2>
+                  <span
+                    className="w-full rounded-md inline-block"
+                    style={{
+                      backgroundColor: selectedNote ? "#fff" : "#f0f0f0",
+                      display: "block",
+                      width: "100%",
+                      whiteSpace: "pre-line",
+                    }}
+                  >
+                    {selectedNote || "No hay notas"}
+                  </span>
+                </div>
+              )}
+              {selectedRow &&
+              selectedRow.productos &&
+              selectedRow.productos.length > 0 ? (
+                <Table
+                  columns={columnsToShowSecondTable}
+                  data={selectedRow.productos}
                 />
-              </div>
-            )}
-        </Dialog>
+              ) : (
+                <div className="text-gray-500">
+                  Ninguna solicitud seleccionada
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </>
     );
   }

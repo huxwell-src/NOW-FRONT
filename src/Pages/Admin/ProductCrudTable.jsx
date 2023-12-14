@@ -24,8 +24,6 @@ class TableProducts extends Component {
         // Renderizado del componente
         return (
             <>
-                {/* Componente de layout */}
-                <Layout />
 
                 {/* Componente de encabezado con título y datos de la ruta */}
                 <Header title="Gestion de profesores"  route={routeData} />

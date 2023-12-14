@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import { getUserData } from '../api/userService';
 import { Navigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
-import Layout from '../components/Layout';
 
 class Dashboard extends Component {
   constructor(props) {
@@ -44,12 +43,12 @@ class Dashboard extends Component {
 
     return (
       <>
-        <Layout nombre={<p>¡Bienvenido/a, {user.nombre} {user.apellido}!</p>} />
         <div className="ml-10 mt-24">
           
           <p className="text-4xl font-bold text-sky-700 mb-2">¡Bienvenido, {user.rol} {user.nombre} {user.apellido}!</p>
           <p className="mb-2">ID: {user.id_user}</p>
           <p className="mb-2">Rut: {user.rut}</p>
+          <p className="mb-2">Rol: {user.rol}</p>
           <p className="mb-2">Email: {user.email}</p>
           <p className="mb-2">Carrera: {user.carrera.map(carrera => carrera.nombre).join(', ')}</p>
           <p className="mb-2">Curso: {user.curso}</p>

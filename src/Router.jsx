@@ -12,7 +12,7 @@ import Entrega from "./Pages/Bodeguero/Entrega";
 import Pendientes from "./Pages/Bodeguero/Pendientes";
 import Cookies from "js-cookie";
 import NotFound from "./Pages/NotFound";
-import { Sidebar } from "./components/Sidebar";
+import { Sidebar } from "./components/UI/Sidebar";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 const Router = () => {

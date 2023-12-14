@@ -1,6 +1,5 @@
 // Importación de bibliotecas y componentes
 import { Component } from "react";
-import Layout from "../../components/Layout";
 import UserCrudTable from "../../components/Admin/UserCrudTable";
 import Header from "../../components/Header";
 
@@ -24,8 +23,6 @@ class TableAlumnos extends Component {
     // Renderizado del componente
     return (
       <>
-        {/* Componente de layout */}
-                <Layout />
         
         {/* Componente de encabezado con título y datos de la ruta */}
         <Header title="Gestion de alumnos" route={routeData} />

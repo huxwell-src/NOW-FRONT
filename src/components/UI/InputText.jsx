@@ -10,7 +10,7 @@ const InputText = ({
   disabled,
 }) => {
   const inputClasses =
-    "py-2 !mt-2 w-full ring-gray-300 ring-1 px-4 rounded-xl sm:w-96 duration-200 focus:outline-none focus:ring focus:ring-primary-400";
+    "py-2 !mt-2 w-full bg-slate-50 ring-gray-300 ring-1 px-4 rounded-xl sm:w-96 duration-200 focus:outline-none focus:ring focus:ring-primary-400";
   const classes = {
     disabled: "opacity-50 cursor-not-allowed"
   };

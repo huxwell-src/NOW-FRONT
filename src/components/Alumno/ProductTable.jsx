@@ -1,17 +1,19 @@
 import React, { Component } from "react";
-import { DataTable } from "primereact/datatable";
-import { Column } from "primereact/column";
-import { Button } from "primereact/button";
-import { Dialog } from "primereact/dialog";
-import { Badge } from "primereact/badge";
+import Button from "../UI/Button";
 import Cookies from "js-cookie";
 import axios from "axios";
-import { Dropdown } from "primereact/dropdown";
-import Header from "../Header";
 import { getUserData } from "../../api/userService";
-import { Toast } from "primereact/toast";
-import { Tag } from "primereact/tag";
-import { classNames } from "primereact/utils";
+import Tag from "../UI/Tag";
+import Table from "../UI/Table";
+import Dropdown from "../UI/Dropdown";
+import InputText from "../UI/InputText";
+import Header from "../UI/Header";
+import {
+  faAdd,
+  faCartPlus,
+  faMinus,
+  faTrash,
+} from "@fortawesome/free-solid-svg-icons";
 
 class ProductTable extends Component {
   constructor(props) {
@@ -26,6 +28,7 @@ class ProductTable extends Component {
       profesores: 0,
       aprobacion: false,
       selectedProfesor: null,
+      searchText: "", // Nuevo estado para el texto de búsqueda
       initialProfessors: [
         { label: "Mario Perez Aguilera ", value: 55, carrera: [2, 3] },
         { label: "Daniel Valdebenito Celedon", value: 56, carrera: [2] },
@@ -97,11 +100,7 @@ class ProductTable extends Component {
       (item) => item.id_producto === product.id_producto
     );
     if (index !== -1) {
-      if (updatedCart[index].quantity > 1) {
-        updatedCart[index].quantity--;
-      } else {
-        updatedCart.splice(index, 1);
-      }
+      updatedCart.splice(index, 1); // Elimina completamente el producto del carrito
 
       // Calcular la cantidad total de productos en el carrito
       const totalQuantity = updatedCart.reduce(
@@ -261,144 +260,210 @@ class ProductTable extends Component {
     }
   };
 
-  calculateAvailabilityPercentage = (disponibilidad, stock) => {
-    if (stock === 0) {
-      return 0; // Evitar la división por cero
+  calculateAvailabilityStatus = (disponibilidad, stock) => {
+    if (disponibilidad === 0) {
+      return { label: "Sin stock", color: "gray" };
     }
-    return ((disponibilidad / stock) * 100).toFixed(2);
+
+    const porcentaje = ((disponibilidad / stock) * 100).toFixed(2);
+
+    if (porcentaje > 75) {
+      return { label: "Alta", color: "green" };
+    } else if (porcentaje <= 75 && porcentaje > 50) {
+      return { label: "Media", color: "yellow" };
+    } else if (porcentaje <= 50 && porcentaje > 25) {
+      return { label: "Media-baja", color: "yellow" };
+    } else {
+      return { label: "Baja", color: "red" };
+    }
   };
 
   render() {
-    const renderFooter = (
-      <div>
-        <Button
-          label="Solicitar"
-          icon="pi pi-check"
-          onClick={this.printSolicitud}
-          disabled={this.state.cart.length === 0} // Disable the button if the cart is empty
-        />
-        <Button
-          label="Cerrar"
-          icon="pi pi-times"
-          onClick={() => this.setState({ visible: false })}
-        />
-      </div>
-    );
-
-    const routeData = [
+    const columnsToShow = [
       {
-        id: 1,
-        name: "Solicitud",
+        name: "Producto",
+        content: (row) => (
+          <div>
+            <div className="m-0 text-base leading-6 font-medium">
+              {row.nombre}
+            </div>
+            <div className="m-0 text-sm font-normal leading-6 text-gray-700">
+              {row.descripcion}
+            </div>
+          </div>
+        ),
       },
       {
-        id: 2,
-        name: "Productos",
-        hidden: true,
+        name: "",
+        content: (row) => {
+          const { label, color } = this.calculateAvailabilityStatus(
+            row.disponibilidad,
+            row.stock
+          );
+          return (
+            <div className="flex flex-col">
+              <Tag color={color}>{label}</Tag>
+            </div>
+          );
+        },
+      },
+      {
+        name: "",
+        content: (row) => (
+          <Button
+            icon={faCartPlus}
+            color="text"
+            className="text-primary-500 aspect-square"
+            iconClassName=" text-lg "
+            pill
+            onClick={() => this.addToCart(row)}
+            disabled={row.disponibilidad === 0}
+          />
+        ),
       },
     ];
 
-    const scrollHeight = "calc(100vh - 256px)";
+    const cartColumns = [
+      {
+        name: "Producto",
+        content: (row) => (
+          <div>
+            <div className="m-0 text-base leading-6 font-medium">
+              {row.nombre}
+            </div>
+            <div className="m-0 text-sm font-normal leading-6 text-gray-700">
+              {row.descripcion}
+            </div>
+          </div>
+        ),
+      },
+      {
+        name: "Cantidad",
+        content: (row) => (
+          <div className="flex items-center">
+            <Button
+              className="text-primary-500 font-bold aspect-square"
+              onClick={() => this.decreaseQuantity(row)}
+              disabled={row.quantity <= 1}
+              color="text"
+              size="sm"
+              pill
+              icon={faMinus}
+            />
+            <span className="text-base leading-6 mx-2 text-gray-700 font-normal">
+              {row.quantity}
+            </span>
+            <Button
+              className="text-primary-500 font-bold aspect-square"
+              onClick={() => this.increaseQuantity(row)}
+              disabled={row.quantity >= row.disponibilidad}
+              color="text"
+              size="sm"
+              pill
+              icon={faAdd}
+            />
+          </div>
+        ),
+      },
+      {
+        name: "Eliminar",
+        content: (row) => (
+          <Button
+            className="text-red-500 hover:bg-red-50 aspect-square"
+            onClick={() => this.removeFromCart(row)}
+            color="text"
+            pill
+            icon={faTrash}
+          />
+        ),
+      },
+    ];
+
+    const selectOptions = [
+      { label: "Seleccionar Profesor", value: "" },
+      ...this.state.initialProfessors.map((profesor) => ({
+        label: profesor.label,
+        value: profesor.value,
+      })),
+    ];
+
+    const filteredProducts = this.state.products.filter((product) =>
+      product.nombre.toLowerCase().includes(this.state.searchText.toLowerCase())
+    );
 
     return (
       <>
-        <Header title="Productos" route={routeData}>
-          <Button
-            onClick={() => this.setState({ visible: true })}
-            className="p-overlay-badge"
-          >
-            <i
-              className="pi pi-shopping-cart p-overlay-badge"
-              style={{ fontSize: "1.5rem" }}
-            >
-              <Badge value={this.state.badgeValue} severity="danger" />
-            </i>
-          </Button>
-        </Header>
+        <div className=" max-h-screen  ">
+          <Header
+            title="Solicitar"
+            subtitle="Texto personalizado"
+            imageUrl="https://modernize-react.adminmart.com/assets/ChatBc-d3c45db6.png"
+          />
 
-        <DataTable
-          value={this.state.products}
-          tableStyle={{ minWidth: "50rem" }}
-          frozenWidth="200px"
-          scrollable
-          className=""
-          scrollHeight={scrollHeight}
-          paginator
-          rows={25}
-          rowsPerPageOptions={[25, 50, 100, 200]}
-        >
-          <Column field="nombre" header="Nombre" />
-          <Column field="descripcion" header="Descripción" />
-          <Column
-            field="disponibilidad"
-            header="Disponible"
-            body={(rowData) => {
-              const percentage = this.calculateAvailabilityPercentage(
-                rowData.disponibilidad,
-                rowData.stock
-              );
-              let tagClass, labelText, iconClass, className;
+          <div className="flex">
+            {/* Primera Tabla: Lista de Productos */}
+            <div className="m-4 w-3/5 rounded-xl shadow-custom bg-white">
+              <div className="w-full border border-b rounded-t-xl">
+                <h3 className="p-4 text-xl font-medium text-slate-800">
+                  Productos
+                </h3>
+              </div>
 
-              if (percentage > 75) {
-                tagClass = "success";
-                labelText = "Alta";
-                iconClass = "pi pi-check";
-              } else if (percentage >= 50) {
-                tagClass = "warning";
-                labelText = "Media";
-                iconClass = "pi pi-exclamation-triangle";
-                
-              } else if (percentage >= 25) {
-                tagClass = "warning";
-                labelText = "Media-Baja";
-                iconClass = "pi pi-exclamation-triangle";
-              } else if (percentage >= 1) {
-                tagClass = "warning";
-                labelText = "Media-Baja";
-                iconClass = "pi pi-exclamation-triangle";
-              } else {
-                tagClass = "";
-                className="!bg-gray-400"
-                labelText = "Sin stock";
-                iconClass = "pi pi-times ";
-              }
-
-              return (
-                <div>
-                  <Tag severity={tagClass} className={className} icon={iconClass}>
-                    {labelText}
-                  </Tag>
+              <div className="p-4">
+                <div className="my-4 w-full">
+                  {/* Agrega el InputText con evento onChange para el buscador */}
+                  <InputText
+                    placeholder="Buscar Producto..."
+                    className="!w-full"
+                    onChange={(e) =>
+                      this.setState({ searchText: e.target.value })
+                    }
+                  />
                 </div>
-              );
-            }}
-          />
+                <Table
+                  columns={columnsToShow}
+                  data={filteredProducts}
+                  paginator
+                />
+              </div>
+            </div>
 
-          <Column frozen alignFrozen="right" body={this.addToCartTemplate} />
-        </DataTable>
-        <Toast ref={this.toast} />
+            {/* Segunda Tabla: Carrito de Compras */}
+            <div className="m-4 w-2/5 rounded-xl shadow-custom bg-white">
+              <div className="w-full border border-b rounded-t-xl">
+                <h3 className="p-4 text-2xl font-medium text-slate-800">
+                  Carrito
+                </h3>
+              </div>
+              <div className="p-4">
+                {/* Agrega el dropdown para seleccionar un profesor */}
+                <div className="my-4">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Seleccionar Profesor
+                  </label>
+                  <Dropdown
+                    options={selectOptions}
+                    value={this.state.selectedProfesor || ""}
+                    onChange={(value) =>
+                      this.setState({ selectedProfesor: parseInt(value, 10) })
+                    }
+                    placeholder="Seleccionar Profesor"
+                  />
+                </div>
 
-        <Dialog
-          header="Carrito de Compras"
-          visible={this.state.visible}
-          breakpoints={{ "960px": "75vw", "641px": "100vw" }}
-          style={{ width: "70vw" }}
-          maximizable
-          onHide={() => this.setState({ visible: false })}
-          footer={renderFooter}
-        >
-          <Dropdown
-            value={this.state.selectedProfesor}
-            options={this.state.initialProfessors}
-            onChange={(e) => this.setState({ selectedProfesor: e.value })}
-            placeholder="Seleccione un profesor"
-            className="w-full my-4"
-          />
-
-          <DataTable value={this.state.cart} size="small">
-            <Column field="nombre" header="Nombre" />
-            <Column field="quantity" header="Cantidad" />
-            <Column header="Acciones" body={this.removeFromCartTemplate} />
-          </DataTable>
-        </Dialog>
+                <Table columns={cartColumns} data={this.state.cart} />
+              </div>
+              <div className="p-4">
+                <Button
+                  className="p-button-primary"
+                  onClick={this.printSolicitud}
+                  // disabled={this.state.cart.length === 0}
+                  label="Siguiente"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
       </>
     );
   }
@@ -406,44 +471,31 @@ class ProductTable extends Component {
   addToCartTemplate = (rowData) => (
     <div>
       <Button
-        icon="pi pi-cart-plus"
-        text
+        icon={faAdd}
+        color="text"
         className="text-sky-500 aspect-square "
-        severity="info"
-        rounded
-        size="large"
         onClick={() => this.addToCart(rowData)}
-        disabled={rowData.disponibilidad === 0} // Deshabilita el botón si la disponibilidad es 0
+        // disabled={rowData.disponibilidad === 0} // Deshabilita el botón si la disponibilidad es 0
       />
     </div>
   );
-  
 
   removeFromCartTemplate = (rowData) => (
     <div className="flex  gap-1 ">
       <Button
-        icon="pi pi-plus"
-        rounded
-        text
-        size="small"
-        severity="info"
+        icon={faAdd}
+        color="text"
         onClick={() => this.increaseQuantity(rowData)}
       />
+
       <Button
-        icon="pi pi-minus"
-        rounded
-        text
-        size="small"
-        severity="info"
+        icon={faMinus}
+        color="text"
         onClick={() => this.decreaseQuantity(rowData)}
       />
       <Button
-        icon="pi pi-trash"
-        rounded
-        text
-        size="small"
-        severity="danger"
-        className="ml-3"
+        icon={faTrash}
+        color="text"
         onClick={() => this.removeFromCart(rowData)}
       />
     </div>

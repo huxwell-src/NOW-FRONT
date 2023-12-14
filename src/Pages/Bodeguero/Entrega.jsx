@@ -1,6 +1,5 @@
 // Importación de bibliotecas y componentes
 import { Component } from 'react'
-import Layout from '../../components/Layout'
 import Header from '../../components/Header'
 import EntregaTable from '../../components/Bodeguero/EntregasTable';
 
@@ -24,9 +23,6 @@ class Entrega extends Component {
         // Renderizado del componente
         return (
             <>
-                {/* Componente de layout */}
-                <Layout />
-
                 {/* Componente de encabezado con título y datos de la ruta */}
                 <Header title="Por entregar"  route={routeData} />
 

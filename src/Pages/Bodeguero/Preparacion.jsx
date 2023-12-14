@@ -1,6 +1,5 @@
 // Importación de bibliotecas y componentes
 import { Component } from 'react'
-import Layout from '../../components/Layout'
 import Header from '../../components/Header'
 import PreparacionTable from '../../components/Bodeguero/PreparacionTable';
 
@@ -24,9 +23,6 @@ class Preparacion extends Component {
         // Renderizado del componente
         return (
             <>
-                {/* Componente de layout */}
-                <Layout />
-
                 {/* Componente de encabezado con título y datos de la ruta */}
                 <Header title="Pendientes de entrega"  route={routeData} />
 

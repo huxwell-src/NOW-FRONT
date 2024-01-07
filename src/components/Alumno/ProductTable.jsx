@@ -39,7 +39,7 @@ const ProductTable = () => {
       if (token) {
         try {
           const response = await axios.get(
-            `${import.meta.env.VITE_BACKEND_URL_BASE}/api/productos`,
+          `${import.meta.env.VITE_BACKEND_URL_BASE}/api/productos`,
             {
               headers: {
                 Authorization: `Token ${token}`,

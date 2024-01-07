@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -13,22 +13,23 @@ import {
   faTicket,
   faToolbox,
 } from "@fortawesome/free-solid-svg-icons";
+import { Tooltip } from "primereact/tooltip";
 import { getUserToken } from "../../api/userService";
 import { Link, useLocation } from "react-router-dom";
 import Button from "./Button";
 import { removeUserToken } from "../../api/userService";
 
 const SidebarContext = createContext();
+
 export function Sidebar({ children }) {
   const [user, setUser] = useState(null);
-  const [userRole, setUserRole] = useState(null);
   const [expanded, setExpanded] = useState(true);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const handleLogout = () => {
     removeUserToken();
-    setUser(null); // Actualiza el estado del usuario a null
-    setDropdownOpen(false); // Cierra el menú desplegable si está abierto
+    setUser(null);
+    setDropdownOpen(false);
     window.location.reload();
   };
 
@@ -51,8 +52,25 @@ export function Sidebar({ children }) {
       }
     };
     fetchData();
-  }, []); 
+  }, []);
 
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 1280) {
+        setExpanded(false);
+      } else {
+        setExpanded(true);
+      }
+    };
+
+    handleResize(); // Llamada inicial
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      // Limpia el evento de cambio de tamaño al desmontar el componente
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
   return (
     <div className="flex h-screen">
       <aside
@@ -107,6 +125,7 @@ export function Sidebar({ children }) {
           <SidebarContext.Provider value={{ expanded }}>
             <ul className="flex-1 px-3">
               {/* Map over items and create SidebarItems */}
+
               <SidebarItem />
             </ul>
           </SidebarContext.Provider>
@@ -152,9 +171,7 @@ export function Sidebar({ children }) {
         </nav>
       </aside>
       <main className="flex-1 bg-slate-100 overflow-x-hidden overflow-y-auto">
-        <div className="container mx-auto" >
-          {children}
-        </div>
+        <div className="container mx-auto">{children}</div>
       </main>
     </div>
   );
@@ -187,7 +204,7 @@ export function SidebarItem() {
 
   let menuData;
   switch (user?.rol) {
-    case "Administrador":
+    case "Admin":
       menuData = [
         {
           label: "Inicio",
@@ -219,7 +236,12 @@ export function SidebarItem() {
       menuData = [
         { label: "Inicio", url: "/dashboard", icon: faHouse },
         { label: "Productos", url: "/productos", icon: faScrewdriverWrench },
-        { label: "Historial", url: "/Solicitudes", icon: faTicket, title: "Mis solicitudes" },
+        {
+          label: "Historial",
+          url: "/Solicitudes",
+          icon: faTicket,
+          title: "Mis solicitudes",
+        },
       ];
       break;
     case "Profesor":
@@ -248,6 +270,7 @@ export function SidebarItem() {
       {menuData.map((item, index) => (
         <Link key={index} to={item.url}>
           <li
+            id={item.label} // Usamos el índice para crear identificadores únicos
             className={`relative flex items-center py-2 px-3 my-1 font-medium rounded-md cursor-pointer transition-colors
               ${
                 location.pathname === item.url
@@ -256,9 +279,14 @@ export function SidebarItem() {
               }`}
           >
             <FontAwesomeIcon icon={item.icon} />
+            {!expanded && (
+              <Tooltip target={`#${item.label}`} content={item.label} />
+            )}
             <span
               className={`mx-2 overflow-hidden transition-all
                   ${expanded ? "w-52 ml-3" : "w-0"}`}
+              data-tip
+              data-for={`tooltip-${index}`}
             >
               {item.label}
             </span>

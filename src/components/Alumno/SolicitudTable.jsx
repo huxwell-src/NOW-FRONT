@@ -183,7 +183,7 @@ class SolicitudTable extends Component {
           } else if (diasFaltantes === 0) {
             message = "Hoy";
           } else {
-            message = `Hace ${Math.abs(diasFaltantes)} día${
+            message = `${Math.abs(diasFaltantes)} día${
               Math.abs(diasFaltantes) !== 1 ? "s" : ""
             } de atraso`;
           }
@@ -213,14 +213,6 @@ class SolicitudTable extends Component {
           </div>
         ),
       },
-      {
-        name: "Nota",
-        content: (row) => (
-          <div>
-            <div className="m-0 text-base leading-6">{row.nota}</div>
-          </div>
-        ),
-      },
     ];
 
     const columnsToShowSecondTable = [
@@ -241,7 +233,7 @@ class SolicitudTable extends Component {
           <div className="m-4 w-3/5 rounded-xl shadow-custom bg-white">
             <div className="w-full border border-b rounded-t-xl">
               <h3 className="p-4 text-xl font-medium text-slate-800">
-                Productos
+                Solicitudes
               </h3>
             </div>
             <div className="p-4">
@@ -257,13 +249,13 @@ class SolicitudTable extends Component {
           <div className="m-4 w-2/5 rounded-xl shadow-custom bg-white">
             <div className="w-full border border-b rounded-t-xl">
               <h3 className="p-4 text-2xl font-medium text-slate-800">
-                Carrito
+                Detalle
               </h3>
             </div>
             <div className="p-4">
               {selectedNote && (
                 <div className="my-4">
-                  <h2 className="text-lg font-semibold">Nota del profesor:</h2>
+                  <h2 className="text-lg font-medium">Nota de la solicitud:</h2>
                   <span
                     className="w-full rounded-md inline-block"
                     style={{

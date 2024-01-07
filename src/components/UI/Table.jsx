@@ -8,7 +8,7 @@ import {
   faAnglesRight,
 } from "@fortawesome/free-solid-svg-icons";
 
-const Table = ({ columns, data, onRowSelect, paginator = false, height  }) => {
+const Table = ({ columns, data, onRowSelect, paginator = false, height }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(25);
   const [selectedRows, setSelectedRows] = useState([]);
@@ -51,19 +51,19 @@ const Table = ({ columns, data, onRowSelect, paginator = false, height  }) => {
   const handleRowClick = (row) => {
     const selectedIndex = selectedRows.indexOf(row);
     let newSelected = [];
-  
+
     if (selectedIndex === -1) {
       newSelected = [row]; // Only select the clicked row
     }
-  
+
     setSelectedRows(newSelected);
-  
+
     // Callback to inform the parent component about the selected rows
     if (onRowSelect) {
       onRowSelect(newSelected);
     }
   };
-  
+
   useEffect(() => {
     setCurrentPage(1); // Reset currentPage when data changes
   }, [data]);
@@ -79,45 +79,46 @@ const Table = ({ columns, data, onRowSelect, paginator = false, height  }) => {
     }
   };
 
-return (
-  <div className="overflow-x-auto border border-slate-200 rounded-xl" style={{ height: height || 'auto' }}>
-  <div
-      className="relative"
-      ref={tableRef}
-      onScroll={handleScroll}
+  return (
+    <div
+      className="overflow-x-auto border border-slate-200 rounded-xl"
+      style={{ height: height || "auto" }}
     >
-      <table className="min-w-full bg-white">
-        <thead>
-          <tr className="bg-blue-gray-100 text-gray-700">
-            {columns.map((column) => (
+      <div className="relative" ref={tableRef} onScroll={handleScroll}>
+        <table className="min-w-full bg-white">
+          <thead>
+            {columns.map((column, columnIndex) => (
               <th
-                key={column.name}
+                key={columnIndex}
                 className="font-semibold text-lg tracking-wider table-cell align-middle text-left py-4 px-4 text-slate-900 border-b border-slate-200 sticky top-0 bg-white"
               >
                 {column.name}
               </th>
             ))}
-          </tr>
-        </thead>
-        <tbody>
-          {currentItems.map((row, rowIndex) => (
-            <tr
-              key={rowIndex}
-              className={`border-b duration-200 border-blue-gray-200 ${
-                selectedRows.indexOf(row) !== -1 ? "bg-gray-100" : ""
-              } `}
-              onClick={() => handleRowClick(row)}
-            >
-              {columns.map((column) => (
-                <td key={column.name} className="py-3 px-4">
-                  {column.content(row)}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {currentItems.map((row, rowIndex) => {
+              const rowKey = `${row.id_producto}-${rowIndex}`;
+
+              return (
+                <tr
+                  key={rowKey}
+                  className={`border-b duration-200 border-blue-gray-200 ${
+                    selectedRows.indexOf(row) !== -1 ? "bg-gray-100" : ""
+                  } `}
+                  onClick={() => handleRowClick(row)}
+                >
+                  {columns.map((column, columnIndex) => (
+                    <td key={`${rowKey}-${columnIndex}`} className="py-3 px-4">
+                      {column.content(row)}
+                    </td>
+                  ))}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
 
       {paginator && (
         <div className="flex sticky tracking-wider  mt-4">

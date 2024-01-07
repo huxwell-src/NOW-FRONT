@@ -55,14 +55,14 @@ class Login extends Component {
 
     try {
       const response = await axios.post(
-        "http://127.0.0.1:8000/api/login",
+        `${import.meta.env.VITE_BACKEND_URL_BASE}/api/login`,
         loginData
       );
 
       if (response.data.token) {
         const token = response.data.token;
 
-        const userResponse = await axios.get("http://127.0.0.1:8000/api/user", {
+        const userResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL_BASE}/api/user`, {
           headers: {
             Authorization: `Token ${token}`,
           },

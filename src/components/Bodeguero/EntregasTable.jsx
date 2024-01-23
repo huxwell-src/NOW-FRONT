@@ -328,8 +328,6 @@ class EntregaTable extends Component {
               rounded
               severity="success"
               onClick={() => {
-                // Agrega lógica para guardar la nota si es necesario
-                // Aquí puedes enviar la nota a la API o realizar cualquier otra acción
                 this.hideNotaDialog();
               }}
             />

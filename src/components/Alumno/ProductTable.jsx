@@ -9,6 +9,8 @@ import toast, { Toaster } from "react-hot-toast";
 import { Dropdown } from "primereact/dropdown";
 import InputText from "../UI/InputText";
 import Header from "../UI/Header";
+import { MultiSelect } from "primereact/multiselect";
+
 import {
   faAdd,
   faCartPlus,
@@ -31,40 +33,59 @@ const ProductTable = () => {
     { label: "Vladimir Quezada Cid", value: 58, carrera: [4] },
     { label: "Richard Chaparro Cares", value: 59, carrera: [4] },
   ]);
+  const [alumnos, setAlumnos] = useState([]);
+  const [selectedAlumnos, setSelectedAlumnos] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
       const token = Cookies.get("token");
-
+  
       if (token) {
         try {
-          const response = await axios.get(
-          `${import.meta.env.VITE_BACKEND_URL_BASE}/api/productos`,
+          // Obtener productos
+          const productsResponse = await axios.get(
+            `${import.meta.env.VITE_BACKEND_URL_BASE}/api/productos`,
             {
               headers: {
                 Authorization: `Token ${token}`,
               },
             }
           );
-          setProducts(response.data);
-
+  
+          setProducts(productsResponse.data);
+  
+          // Obtener datos del usuario
           const userData = await getUserData(token);
           const userCarrera = userData.carrera.map((carrera) => carrera.id);
-
+  
+          // Filtrar profesores
           const filteredProfessors = initialProfessors.filter((profesor) =>
             profesor.carrera.some((c) => userCarrera.includes(c))
           );
-
+  
           setInitialProfessors(filteredProfessors);
+  
+          // Obtener datos de alumnos (reemplaza 'api/alumnos' con la ruta correcta)
+          const alumnosResponse = await axios.get(
+            `${import.meta.env.VITE_BACKEND_URL_BASE}/api/create`,
+            {
+              headers: {
+                Authorization: `Token ${token}`,
+              },
+            }
+          );
+  
+          setAlumnos(alumnosResponse.data);
         } catch (error) {
-          console.error("Error al obtener datos de productos:", error);
+          console.error("Error al obtener datos de productos, profesores o alumnos:", error);
         }
       }
     };
-
+  
     fetchData();
   }, [initialProfessors]);
-
+  
+  
   const addToCart = (product) => {
     const updatedCart = [...cart];
     const index = updatedCart.findIndex(
@@ -117,7 +138,9 @@ const ProductTable = () => {
 
         for (const item of cart) {
           const productDetails = await axios.get(
-            `http://127.0.0.1:8000/api/productos/${item.id_producto}`,
+            `${import.meta.env.VITE_BACKEND_URL_BASE}/api/productos/${
+              item.id_producto
+            }`,
             {
               headers: {
                 Authorization: `Token ${token}`,
@@ -169,7 +192,7 @@ const ProductTable = () => {
         toast.success("Solicitud Enviada");
 
         const response = await axios.post(
-          "http://127.0.0.1:8000/api/solicitudes",
+          `${import.meta.env.VITE_BACKEND_URL_BASE}/api/solicitudes`,
           solicitud,
           {
             headers: {
@@ -181,7 +204,9 @@ const ProductTable = () => {
 
         for (const product of productosDuplicados) {
           const productDetails = await axios.get(
-            `http://127.0.0.1:8000/api/productos/${product.id_producto}`,
+            `${import.meta.env.VITE_BACKEND_URL_BASE}/api/productos/${
+              product.id_producto
+            }`,
             {
               headers: {
                 Authorization: `Token ${token}`,
@@ -193,7 +218,9 @@ const ProductTable = () => {
             productDetails.data.disponibilidad - product.cantidad;
 
           await axios.put(
-            `http://127.0.0.1:8000/api/productos/${product.id_producto}`,
+            `${import.meta.env.VITE_BACKEND_URL_BASE}/api/productos/${
+              product.id_producto
+            }`,
             {
               ...productDetails.data,
               disponibilidad: updatedDisponibilidad,
@@ -208,14 +235,15 @@ const ProductTable = () => {
         }
 
         const responseProducts = await axios.get(
-          "http://127.0.0.1:8000/api/productos",
+          `${import.meta.env.VITE_BACKEND_URL_BASE}/api/productos`,
           {
             headers: {
               Authorization: `Token ${token}`,
             },
           }
         );
-
+        
+        console.log("Productos desde la API:", responseProducts.data);
         setProducts(responseProducts.data);
       } catch (error) {
         console.error("Error al obtener datos del usuario:", error);
@@ -402,7 +430,11 @@ const ProductTable = () => {
                   onChange={(e) => setSearchText(e.target.value)}
                 />
               </div>
-              <Table columns={columnsToShow} data={filteredProducts} paginator />
+              <Table
+                columns={columnsToShow}
+                data={filteredProducts}
+                paginator
+              />
             </div>
           </div>
 
@@ -423,9 +455,24 @@ const ProductTable = () => {
                   value={selectedProfesor || ""}
                   onChange={(e) => setSelectedProfesor(e.value)}
                   placeholder="Seleccionar Profesor"
+                  className="w-full"
                 />
               </div>
-
+              <div className="my-4">
+                <label className="block text-sm font-medium text-gray-700">
+                  Seleccionar Compañeros
+                </label>
+                <MultiSelect
+                  value={selectedAlumnos}
+                  options={alumnos.map((alumno) => ({
+                    label: alumno.nombre,
+                    value: alumno.id,
+                  }))}
+                  onChange={(e) => setSelectedAlumnos(e.value)}
+                  placeholder="Seleccionar Alumnos"
+                  className="w-full"
+                />
+              </div>
               <Table columns={cartColumns} data={cart} />
             </div>
             <div className="p-4">

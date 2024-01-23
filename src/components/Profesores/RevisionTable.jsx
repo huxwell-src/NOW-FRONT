@@ -1,435 +1,368 @@
-import React, { Component } from "react";
-import { DataTable } from "primereact/datatable";
-import { Column } from "primereact/column";
+import { useState, useEffect, useCallback } from "react";
 import { Dialog } from "primereact/dialog";
-import { Button } from "primereact/button";
+import Button from "../UI/Button";
 import axios from "axios";
 import Cookies from "js-cookie";
+import Table from "../UI/Table";
+import Header from "../UI/Header";
 import { getProducts } from "../../api/productService";
-import { ToggleButton } from "primereact/togglebutton";
+import ToggleButton from "../UI/ToggleButton";
 import { InputTextarea } from "primereact/inputtextarea";
-import { Toast } from "primereact/toast";
+import toast, { Toaster } from "react-hot-toast";
+import { faCheck, faPenToSquare, faX } from "@fortawesome/free-solid-svg-icons";
 
-class RevisionTable extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      solicitudes: [],
-      products: [],
-      visible: false,
-      selectedSolicitud: null,
-      currentUser: null,
-      allButtonsActivated: false,
-      rowStates: {},
-      showSuccessToast: false, // Nuevo estado para controlar la visualización de la toast de éxito
-      nota: "", // Nuevo estado para almacenar la nota
-    };
-    this.toast = React.createRef(); // Referencia al componente Toast
-  }
+const RevisionTable = () => {
+  const [solicitudes, setSolicitudes] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [visible, setVisible] = useState(false);
+  const [selectedSolicitud, setSelectedSolicitud] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [allButtonsActivated, setAllButtonsActivated] = useState(false);
+  const [rowStates, setRowStates] = useState({});
+  const [nota, setNota] = useState("");
 
-  async componentDidMount() {
+  const fetchData = useCallback(async () => {
     try {
-      // Obtener el token de las cookies
       const token = Cookies.get("token");
 
-      // Verificar si el token está presente
       if (!token) {
         console.error("Token no encontrado en las cookies");
         return;
       }
 
-      // Configurar el encabezado de la solicitud con el token
       const config = {
         headers: {
           Authorization: `Token ${token}`,
         },
       };
 
-      // Obtener datos del usuario
       const userDataResponse = await axios.get(
         "http://127.0.0.1:8000/api/user",
         config
       );
       const currentUser = userDataResponse.data.user;
 
-      // Obtener todas las solicitudes desde el endpoint
       const solicitudesResponse = await axios.get(
         "http://127.0.0.1:8000/api/solicitudes",
         config
       );
 
-      // Filtrar las solicitudes para mostrar solo las del usuario actual
       const solicitudesUsuarioActual = solicitudesResponse.data.filter(
         (solicitud) => solicitud.profesor.id_user === currentUser.id_user
       );
 
-      // Filtrar las solicitudes para mostrar solo las que están en revisión
       const solicitudesEnRevision = solicitudesUsuarioActual.filter(
         (solicitud) => solicitud.estado === "en revisión"
       );
 
-      // Obtener datos de productos mediante la función getProductsData
-      const productsData = await this.getProductsData();
+      const productsData = await getProducts();
 
-      this.setState({
-        solicitudes: solicitudesEnRevision,
-        products: productsData, // Actualizar el estado de los productos
-        currentUser: currentUser,
-      });
+      setSolicitudes(solicitudesEnRevision);
+      setProducts(productsData);
+      setCurrentUser(currentUser);
     } catch (error) {
       console.error(
         "Error al obtener las solicitudes o datos del usuario:",
         error
       );
     }
-  }
+  }, []);
 
-  // Función para obtener datos de productos
-  async getProductsData() {
-    try {
-      return await getProducts(); // Utiliza tu función getProducts existente
-    } catch (error) {
-      console.error("Error al obtener datos de productos:", error);
-      return [];
-    }
-  }
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
-  // Función para mostrar los detalles de un producto en un diálogo
-  showDetailsDialog = (rowData) => {
-    this.setState({ visible: true, selectedSolicitud: rowData });
+  const showDetailsDialog = (rowData) => {
+    setSelectedSolicitud(rowData);
+    setVisible(true);
   };
 
-  // Función para cerrar el diálogo de detalles
-  hideDetailsDialog = () => {
-    this.setState({ visible: false, nota: "" });
-    this.componentDidMount()
+  const hideDetailsDialog = () => {
+    setVisible(false);
+    setNota("");
+    fetchData();
   };
 
-  handleNotaChange = (e) => {
-    this.setState({ nota: e.target.value });
+  const handleNotaChange = (e) => {
+    setNota(e.target.value);
   };
 
-  // Función para obtener la clase de estilo CSS basada en el estado de la solicitud
-  getEstadoStyleClass(estado) {
-    switch (estado) {
-      case "en revisión":
-        return "text-yellow-900 bg-yellow-300";
-      case "Completado":
-        return "text-green-800";
-      case "Cancelado":
-        return "text-red-800";
-      default:
-        return "text-gray-800";
-    }
-  }
 
-  // Función para obtener el nombre del producto por ID
-  getProductNameById(productId) {
-    const product = this.state.products.find(
-      (prod) => prod.id_producto === productId
-    );
+  const getProductNameById = (productId) => {
+    const product = products.find((prod) => prod.id_producto === productId);
     return product ? product.nombre : "Producto no encontrado";
-  }
+  };
 
-  getToggleButtonClass(isChecked) {
-    if (isChecked) {
-      // Clases para el botón activado
-      return "rounded-full border-none focus:shadow-sky-500! focus:shadow-none bg-sky-500 clases-para-botón-activado";
-    } else {
-      // Clases para el botón desactivado
-      return "rounded-full border-none focus:shadow-sky-500! focus:shadow-none clases-para-botón-desactivado";
-    }
-  }
-
-  enviarFormulario = async () => {
+  const enviarFormulario = async () => {
     try {
-      const { selectedSolicitud, nota, rowStates } = this.state;
-  
-      // Verificar que haya una solicitud seleccionada
       if (!selectedSolicitud) {
         console.error("No hay solicitud seleccionada para enviar.");
         return;
       }
-  
-      // Verificar que todos los ToggleButtons estén activados
-      const allButtonsActivated = selectedSolicitud.productos.every(
+
+      const { id_solicitud, productos } = selectedSolicitud;
+
+      const allButtonsActivated = productos.every(
         (producto) => rowStates[producto.id_producto]
       );
-  
+
       if (!allButtonsActivated) {
         console.error("No todos los ToggleButtons están activados.");
         return;
       }
-  
-      // Construir el objeto de datos a enviar
+
       const dataToSend = {
-        id_solicitud: selectedSolicitud.id_solicitud,
-        usuario: selectedSolicitud.usuario.id_user, // Cambiado para enviar solo el ID del usuario
+        id_solicitud: id_solicitud,
+        usuario: selectedSolicitud.usuario.id_user,
         nota: nota,
         estado: "en preparación",
         aprobacion: true,
       };
-  
-      // Imprimir el JSON que se enviará
+
       console.log("JSON a enviar:", JSON.stringify(dataToSend, null, 2));
-  
-      // Configurar el encabezado de la solicitud con el token
+
       const token = Cookies.get("token");
       const config = {
         headers: {
           Authorization: `Token ${token}`,
         },
       };
-  
-      // Enviar los datos al servidor utilizando el método PUT y el token en el encabezado
+
       const response = await axios.put(
-        `http://127.0.0.1:8000/api/solicitudes/${selectedSolicitud.id_solicitud}`,
+        `http://127.0.0.1:8000/api/solicitudes/${id_solicitud}`,
         dataToSend,
         config
       );
-  
-      this.toast.current.show({
-        severity: "success",
-        summary: "Autorización Exitosa",
-        detail: "La solicitud se ha autorizado correctamente.",
-        life: 3000,
-      });
-  
-      // Imprimir la respuesta del servidor en la consola
+
+      toast.success("Solicitud autorizada")
+
       console.log("Respuesta del servidor:", response.data);
-  
-      // Actualizar el estado local excluyendo la solicitud modificada
-      const updatedSolicitudes = this.state.solicitudes.map((solicitud) =>
-        solicitud.id_solicitud === selectedSolicitud.id_solicitud
+
+      const updatedSolicitudes = solicitudes.map((solicitud) =>
+        solicitud.id_solicitud === id_solicitud
           ? { ...solicitud, ...dataToSend }
           : solicitud
       );
-  
-      // Actualizar el estado y forzar la actualización del componente
-      this.setState({ solicitudes: updatedSolicitudes }, () =>
-        this.forceUpdate()
-      );
-  
-      // Opcional: Puedes realizar otras acciones después de enviar el formulario
-  
-      // Cerrar el diálogo después de enviar el formulario
-      this.hideDetailsDialog();
+
+      setSolicitudes(updatedSolicitudes);
+
+      hideDetailsDialog();
     } catch (error) {
       console.error("Error al enviar el formulario:", error);
     }
   };
-  
 
-  enviarRechazo = async () => {
+  const enviarRechazo = async () => {
     try {
-      const { selectedSolicitud, nota } = this.state;
-  
-      // Verificar si hay una solicitud seleccionada
       if (!selectedSolicitud) {
         console.error("No hay solicitud seleccionada para completar");
         return;
       }
-  
-      // Obtener el token de las cookies
+
       const token = Cookies.get("token");
-  
-      // Configurar el encabezado de la solicitud con el token
       const config = {
         headers: {
           Authorization: `Token ${token}`,
         },
       };
-  
-      // Detalles de la solicitud a rechazar
+
+      console.log(selectedSolicitud.id_solicitud);
+
       const solicitudData = {
         id_solicitud: selectedSolicitud.id_solicitud,
-        usuario: selectedSolicitud.usuario.id_user, // Supongo que el id del usuario solicitante está en usuario.id
+        usuario: selectedSolicitud.usuario.id_user,
         estado: "Rechazado",
-        nota: nota, // Agregar la nota al cuerpo de la solicitud
+        nota: nota,
       };
-  
-      // Realizar la solicitud PUT
+
       const completadaResponse = await axios.put(
         `http://127.0.0.1:8000/api/solicitudes/${solicitudData.id_solicitud}`,
         solicitudData,
         config
       );
-  
-      // Imprimir la información en la consola
+
       console.log("Solicitud rechazada:", completadaResponse.data);
-  
-      // Puedes realizar alguna lógica adicional después de rechazar la solicitud si es necesario
-  
-      // Mostrar Toast de éxito
-      this.toast.current.show({
-        severity: "success",
-        summary: "Rechazo Exitoso",
-        detail: "La solicitud se ha rechazado correctamente.",
-        life: 3000,
-      });
-  
-      // Actualizar la tabla después de rechazar la solicitud
-      this.componentDidMount();
-  
-      // Cerrar el diálogo después de rechazar la solicitud
-      this.hideDetailsDialog();
+
+      toast.success("solicitud rechazada")
+
+      fetchData();
+
+      hideDetailsDialog();
     } catch (error) {
       console.error("Error al rechazar la solicitud:", error);
     }
   };
-  
 
-  checkAllButtonsActivated() {
-    const { selectedSolicitud, rowStates } = this.state;
-    if (selectedSolicitud && selectedSolicitud.productos) {
-      const allButtonsActivated = selectedSolicitud.productos.every(
-        (producto) => rowStates[producto.id_producto]
-      );
-      this.setState({ allButtonsActivated });
-    }
-  }
+  const checkAllButtonsActivated = () => {
+    const allButtonsActivated = selectedSolicitud?.productos?.every(
+      (producto) => rowStates[producto.id_producto]
+    );
+    console.log("All Buttons Activated:", allButtonsActivated);
+    setAllButtonsActivated(allButtonsActivated);
+  };
 
-  render() {
-    const {
-      solicitudes,
-      selectedSolicitud,
-      visible,
-      rowStates,
-      nota,
-      showSuccessToast,
-    } = this.state;
+  const columnsToShow = [
+    {
+      name: "ID",
+      center: true,
+      content: (row) => (
+        <div>
+          <div className="m-0 text-center  text-base leading-6">
+            {row.id_solicitud}
+          </div>
+        </div>
+      ),
+    },
 
-    const footerContent = (
-      <div>
-        <Button
-          label="Rechazar"
-          severity="danger"
-          text
-          rounded
-          size="small"
-          icon="pi pi-times"
-          onClick={this.enviarRechazo}
-        />
-        <Button
-          label="Autorizar"
-          severity="success"
-          rounded
-          size="small"
-          icon="pi pi-check"
-          autoFocus
-          disabled={!this.state.allButtonsActivated}
-          onClick={this.enviarFormulario}
+    {
+      name: "Alumno",
+      content: (row) => (
+        <div>
+          <div className="m-0 text-base leading-6">
+            {row.usuario.nombre} <br />
+            {row.usuario.apellido}
+          </div>
+        </div>
+      ),
+    },
+    {
+      name: "Fecha de Creación",
+      content: (row) => (
+        <div>
+          <div className="m-0 text-base leading-6">
+            {new Date(row.fecha_creacion).toLocaleDateString("es-ES")}
+          </div>
+        </div>
+      ),
+    },
+    {
+      name: "Fecha de Entrega",
+      content: (row) => (
+        <div>
+          <div className="m-0 text-base leading-6">
+            {new Date(row.fecha_entrega).toLocaleDateString("es-ES")}
+          </div>
+        </div>
+      ),
+    },
+    {
+      content: (row) => (
+        <>
+          <Button
+            label="Autorizar"
+            color="text"
+            icon={faPenToSquare}
+            iconClassName="mx-1"
+            className="text-sky-700 font-semibold"
+            onClick={() => showDetailsDialog(row)}
+          />
+        </>
+      ),
+    },
+  ];
+
+  const footerContent = (
+    <div>
+      <Button
+        label="Rechazar"
+        color="text"
+        icon={faX}
+        iconClassName="mx-1"
+        className="text-red-600 font-semibold"
+        onClick={enviarRechazo}
+      />
+      <Button
+        label="Autorizar"
+        color="success"
+        icon={faCheck}
+        iconClassName="mx-1"
+        disabled={allButtonsActivated}
+        onClick={enviarFormulario}
+      />
+    </div>
+  );
+
+  return (
+    <>
+      <Toaster />
+      <Header
+        title="Solicitudes Pendientes"
+        subtitle="Solicitudes sin revisar"
+        imageUrl="https://modernize-react.adminmart.com/assets/ChatBc-d3c45db6.png"
+      />
+      <div className="m-4">
+        <Table
+          columns={columnsToShow}
+          data={solicitudes}
+          paginator
         />
       </div>
-    );
 
-    return (
-      <>
-        {/* Tabla de revisiones */}
-        <DataTable
-          value={solicitudes}
-          emptyMessage="No hay solicitudes disponibles."
-        >
-          <Column field="id_solicitud" header="ID de solicitud" />
-          <Column field="fecha_creacion" header="Fecha de creación" />
-          <Column field="fecha_entrega" header="Fecha de entrega" />
-          <Column
-            field="usuario"
-            header="Alumno"
-            sortable
-            body={(rowData) => (
-              <span>
-                {rowData.usuario.nombre} {rowData.usuario.apellido}
-              </span>
-            )}
-            filter
-            filterPlaceholder="Buscar Alumno"
-          ></Column>
-          {/* Botón para ver detalles de la solicitud */}
-          <Column
-            body={(rowData) => (
-              <>
-                <Button
-                  size="small"
-                  rounded
-                  text
-                  severity="info"
-                  icon="pi pi-chevron-right"
-                  iconPos="right"
-                  label="Autorizar"
-                  className="text-sky-500"
-                  onClick={() => this.showDetailsDialog(rowData)}
-                />
-              </>
-            )}
-          />
-        </DataTable>
-
-        <Toast ref={this.toast} />
-
-        {/* Diálogo para mostrar los detalles de la solicitud seleccionada */}
-        <Dialog
-          header="Autorizacion de la solicitud"
-          visible={visible}
-          onHide={this.hideDetailsDialog}
-          footer={footerContent}
-          maximizable
-          style={{ width: "50vw" }}
-        >
-          {/* Mostrar tabla de productos si hay productos en la solicitud seleccionada */}
-
-          {selectedSolicitud &&
-            selectedSolicitud.productos &&
-            selectedSolicitud.productos.length > 0 && (
-              <DataTable value={selectedSolicitud.productos}>
-                <Column field="id_producto" header="ID" />
-                <Column
-                  field="nombre"
-                  header="Nombre"
-                  body={(rowData) => (
-                    <span>{this.getProductNameById(rowData.id_producto)}</span>
-                  )}
-                />
-                <Column field="cantidad" header="Cantidad" />
-
-                <Column
-                  expander
-                  header=""
-                  body={(rowData) => (
+      <Dialog
+        header="Autorizacion de la solicitud"
+        visible={visible}
+        onHide={hideDetailsDialog}
+        footer={footerContent}
+        maximizable
+        style={{ width: "50vw" }}
+      >
+        {selectedSolicitud &&
+          selectedSolicitud.productos &&
+          selectedSolicitud.productos.length > 0 && (
+            <Table
+              columns={[
+                { name: "ID", content: (rowData) => rowData.id_producto },
+                {
+                  name: "Nombre",
+                  content: (rowData) => getProductNameById(rowData.id_producto),
+                },
+                {
+                  name: "Cantidad",
+                  center: true,
+                  content: (rowData) => (
+                    <div className="text-center w-full">
+                      <span>{rowData.cantidad}</span>
+                    </div>
+                  ),
+                },
+                {
+                  name: "Acciones",
+                  content: (rowData) => (
                     <ToggleButton
                       checked={rowStates[rowData.id_producto] || false}
                       onChange={() => {
                         const newStates = { ...rowStates };
                         newStates[rowData.id_producto] =
                           !rowStates[rowData.id_producto];
-                        this.setState(
-                          { rowStates: newStates },
-                          this.checkAllButtonsActivated
-                        );
+                        setRowStates(newStates);
+                        checkAllButtonsActivated();
                       }}
-                      onLabel="Autorizado" // Cambia esto según tu necesidad
-                      offLabel="No autorizado" // Cambia esto según tu necesidad
-                      severity="info" // Añade el atributo severity
-                      className={this.getToggleButtonClass(
-                        rowStates[rowData.id_producto]
-                      )}
+                      onLabel="Autorizado"
+                      offLabel="No autorizado"
+                      colorOn="text"
+                      colorOff="text"
+                      offClassName="text-red-700" // Clases adicionales cuando está en estado "off"
+                      className="font-semibold"
                     />
-                  )}
-                />
-              </DataTable>
-            )}
-          <h2 className=" text-lg font-semibold my-4 ">Notas:</h2>
-          <InputTextarea
-            id="username"
-            rows={5}
-            className="w-full"
-            value={nota} // Asigna el valor del estado a la prop 'value'
-            onChange={this.handleNotaChange} // Agrega la función onChange
-          />
-        </Dialog>
-      </>
-    );
-  }
-}
+                  ),
+                },
+              ]}
+              data={selectedSolicitud.productos}
+              onRowSelect={(selectedRows) => handleRowSelect(selectedRows)}
+              paginator={false}
+            />
+          )}
+        <h2 className=" text-lg font-semibold my-4 ">Notas:</h2>
+        <InputTextarea
+          id="username"
+          rows={5}
+          className="w-full"
+          value={nota}
+          onChange={handleNotaChange}
+        />
+      </Dialog>
+    </>
+  );
+};
 
 export default RevisionTable;

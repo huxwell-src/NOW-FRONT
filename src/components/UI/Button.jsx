@@ -28,7 +28,7 @@ const Button = ({
       primary:
         "bg-primary-500 hover:bg-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-opacity-50 text-white",
       success:
-        "bg-emerald-500 hover:bg-emerald-600 focus:ring-2 focus:ring-emerald-500 focus:ring-opacity-50 text-gray-900 text-white",
+        "bg-emerald-700 hover:bg-emerald-800 focus:ring-2 focus:ring-emerald-700 focus:ring-opacity-50 text-gray-900 text-white",
       danger:
         "bg-red-500 hover:bg-red-600 focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 text-white",
       text:
@@ -54,13 +54,14 @@ const Button = ({
       type={type}
       disabled={disabled}
     >
+      {label} 
       {icon && (
         <FontAwesomeIcon
           className={iconClassName} // Usar las clases del icono proporcionadas
           icon={icon}
         />
       )}
-      {label}
+      
     </button>
   );
 };

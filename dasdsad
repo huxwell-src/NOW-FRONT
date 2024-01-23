@@ -1,0 +1,150 @@
+[33mcommit ee38e66b89cd57e9f3a2c6e6a3ccd91253e0edc2[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m
+Author: huxwell-src <niko2000gb@gmail.com>
+Date:   Sun Jan 7 15:47:38 2024 -0300
+
+    api
+
+[33mcommit 482c2de8d39a9e5627d53e1cc477222c0cfb8883[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: huxwell-src <niko2000gb@gmail.com>
+Date:   Sun Jan 7 15:28:41 2024 -0300
+
+    Api dinamica
+
+[33mcommit 3ec7687482ea72ff8bf355a691821e5a139bdcc0[m
+Author: huxwell.src <niko2000gb@gmail.com>
+Date:   Thu Dec 14 14:55:16 2023 -0300
+
+    Mejoras ui alumno
+
+[33mcommit 284bdc4c18374061d60c5a85f9bad4be8d1043f1[m
+Author: huxwell.src <niko2000gb@gmail.com>
+Date:   Tue Dec 12 14:27:10 2023 -0300
+
+    aaa
+
+[33mcommit 129da72cbdf06e117d1e9c60335ff4a7822cddae[m
+Author: huxwell.src <niko2000gb@gmail.com>
+Date:   Tue Dec 12 13:11:37 2023 -0300
+
+    Sidebar
+
+[33mcommit 19dbe55d0c78df739a7e9d06394a4609a03d4da9[m
+Author: huxwell.src <niko2000gb@gmail.com>
+Date:   Mon Dec 11 14:12:35 2023 -0300
+
+    404
+
+[33mcommit 5838ed9e7e17d20ada932e26c7c6545bb0913e85[m
+Author: huxwell.src <niko2000gb@gmail.com>
+Date:   Mon Dec 11 12:05:12 2023 -0300
+
+    my ui
+
+[33mcommit 53defe04e9dcaf7384655a378cdc43587defaa09[m
+Author: huxwell.src <niko2000gb@gmail.com>
+Date:   Thu Nov 23 12:24:09 2023 -0300
+
+    aa
+
+[33mcommit 16721f7a8960a22bee8042a6ed52d6731c54315b[m
+Author: huxwell.src <niko2000gb@gmail.com>
+Date:   Tue Nov 21 22:40:51 2023 -0300
+
+    aa
+
+[33mcommit ecff9396347506cff0864376531e8666fd9f3370[m
+Author: huxwell.src <niko2000gb@gmail.com>
+Date:   Tue Nov 21 02:32:58 2023 -0300
+
+    aa
+
+[33mcommit a8a36485d85d258834138f9935ed809565e9024a[m
+Author: huxwell.src <niko2000gb@gmail.com>
+Date:   Mon Nov 20 01:50:47 2023 -0300
+
+    aa
+
+[33mcommit 36bd8cf88ee312583ae377ff68eedcc672f2bbcd[m
+Author: huxwell.src <niko2000gb@gmail.com>
+Date:   Mon Nov 20 00:15:15 2023 -0300
+
+    aa
+
+[33mcommit 32af6bc253349135ffffd4009ea9fa6b370e8ac4[m
+Author: huxwell.src <niko2000gb@gmail.com>
+Date:   Sat Nov 18 01:43:52 2023 -0300
+
+    kkk
+
+[33mcommit 8655584d345cc330e689aa883839a320a0cd7002[m
+Author: huxwell.src <niko2000gb@gmail.com>
+Date:   Fri Nov 17 13:46:17 2023 -0300
+
+    Prof
+
+[33mcommit 5c9c9721cb59a9bcb450a7550fc4786bcca85c0d[m
+Author: huxwell.src <niko2000gb@gmail.com>
+Date:   Fri Nov 17 13:07:01 2023 -0300
+
+    Mejora tabla soli
+
+[33mcommit 711b122669f360e859849c13c2f89496646e6560[m
+Author: huxwell.src <niko2000gb@gmail.com>
+Date:   Mon Nov 13 20:12:08 2023 -0300
+
+    soli
+
+[33mcommit 6a845c0bbb8b6fcf8a76be99f82e464889c4c0b4[m
+Author: huxwell.src <niko2000gb@gmail.com>
+Date:   Sat Nov 11 22:08:20 2023 -0300
+
+    Cart
+
+[33mcommit db6735e17219651ab6536f8247698e29356bc7bc[m
+Author: huxwell.src <niko2000gb@gmail.com>
+Date:   Thu Nov 2 22:30:35 2023 -0300
+
+    PWA
+
+[33mcommit 5b92e494a84980a0c99dcc90f97397b993776f62[m
+Author: huxwell.src <niko2000gb@gmail.com>
+Date:   Thu Nov 2 21:59:05 2023 -0300
+
+    login
+
+[33mcommit 31f5667598759a71648d754f13646edecfb694de[m
+Author: huxwell.src <niko2000gb@gmail.com>
+Date:   Thu Nov 2 21:56:40 2023 -0300
+
+    AA
+
+[33mcommit cda671e8979d7984749ed00d673582eff18b2ee9[m
+Author: huxwell.src <niko2000gb@gmail.com>
+Date:   Thu Nov 2 11:58:35 2023 -0300
+
+    ss
+
+[33mcommit 15380b1ce31bcec5686959ffa791a1897dca6ed9[m
+Merge: 91622ff 5fa2e6c
+Author: huxwell.src <niko2000gb@gmail.com>
+Date:   Tue Oct 31 22:19:45 2023 -0300
+
+    Merge branch 'main' of https://github.com/huxwell-src/NOW-FRONT
+
+[33mcommit 91622ff49ed2ba2f2a7528d97c7b6a6148bb9566[m
+Author: huxwell.src <niko2000gb@gmail.com>
+Date:   Tue Oct 31 22:19:39 2023 -0300
+
+    as
+
+[33mcommit 5fa2e6c7be084adbfca904d6a3ef6b6a62e9eb72[m
+Author: huxwell <65736835+huxwell-src@users.noreply.github.com>
+Date:   Tue Oct 31 16:36:33 2023 -0300
+
+    Update README.md
+
+[33mcommit 34d176c79e6662ee1a24ac4561ab19ba6587f7cc[m
+Author: huxwell.src <niko2000gb@gmail.com>
+Date:   Tue Oct 31 16:09:37 2023 -0300
+
+    first commit

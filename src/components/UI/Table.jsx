@@ -19,35 +19,6 @@ const Table = ({ columns, data, onRowSelect, paginator = false, height }) => {
 
   const totalPages = Math.ceil(data.length / itemsPerPage);
 
-  const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
-  };
-
-  const handleItemsPerPageChange = (value) => {
-    setItemsPerPage(value);
-    setCurrentPage(1); // Reset to the first page when changing items per page
-  };
-
-  const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
-
-  const handlePrevPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
-
-  const handleFirstPage = () => {
-    setCurrentPage(1);
-  };
-
-  const handleLastPage = () => {
-    setCurrentPage(totalPages);
-  };
-
   const handleRowClick = (row) => {
     const selectedIndex = selectedRows.indexOf(row);
     let newSelected = [];
@@ -64,10 +35,6 @@ const Table = ({ columns, data, onRowSelect, paginator = false, height }) => {
     }
   };
 
-  useEffect(() => {
-    setCurrentPage(1); // Reset currentPage when data changes
-  }, [data]);
-
   const tableRef = useRef();
 
   const handleScroll = () => {
@@ -79,6 +46,15 @@ const Table = ({ columns, data, onRowSelect, paginator = false, height }) => {
     }
   };
 
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+  };
+
+  const handleItemsPerPageChange = (e) => {
+    const newItemsPerPage = parseInt(e.target.value, 10);
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1); // Reset to the first page when changing items per page
+  };
   return (
     <div
       className="overflow-x-auto border border-slate-200 rounded-xl"
@@ -90,7 +66,9 @@ const Table = ({ columns, data, onRowSelect, paginator = false, height }) => {
             {columns.map((column, columnIndex) => (
               <th
                 key={columnIndex}
-                className="font-semibold text-lg tracking-wider table-cell align-middle text-left py-4 px-4 text-slate-900 border-b border-slate-200 sticky top-0 bg-white"
+                className={`font-semibold text-lg tracking-wider table-cell align-middle text-left py-4 px-4 text-slate-900 border-b border-slate-200 sticky top-0 bg-white ${
+                  column.center ? "text-center" : "" // Aplica la clase text-center si la propiedad center está presente
+                }`}
               >
                 {column.name}
               </th>
@@ -103,8 +81,8 @@ const Table = ({ columns, data, onRowSelect, paginator = false, height }) => {
               return (
                 <tr
                   key={rowKey}
-                  className={`border-b duration-200 border-blue-gray-200 ${
-                    selectedRows.indexOf(row) !== -1 ? "bg-gray-100" : ""
+                  className={`cursor-pointer border-b hover:bg-gray-200/80 duration-200 border-blue-gray-200 ${
+                    selectedRows.indexOf(row) !== -1 ? "" : ""
                   } `}
                   onClick={() => handleRowClick(row)}
                 >
@@ -119,32 +97,27 @@ const Table = ({ columns, data, onRowSelect, paginator = false, height }) => {
           </tbody>
         </table>
       </div>
-
       {paginator && (
-        <div className="flex sticky tracking-wider  mt-4">
-          <div className="flex items-center text-sm justify-end w-full space-x-2">
-            <div className="flex items-center">
-              <label className="mr-2 ">Filas por página:</label>
-              <select
-                value={itemsPerPage}
-                onChange={(e) =>
-                  handleItemsPerPageChange(Number(e.target.value))
-                }
-                className="p-2 border rounded-md focus:outline-none focus:ring focus:border-blue-300"
-              >
-                {[25, 50, 100, 200].map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
+        <div className="flex justify-end w-full items-center">
+          <div className="flex items-center justify-between">
+            <div className="flex text-sm items-center space-x-4">
+              <span>Items por página:</span>
+              <select value={itemsPerPage} onChange={handleItemsPerPageChange}>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={75}>75</option>
+                <option value={100}>100</option>
               </select>
             </div>
+          </div>
+
+          <div className="flex space-x-4">
             <Button
               icon={faAnglesLeft}
               className="aspect-square"
               pill
               color="text"
-              onClick={handleFirstPage}
+              onClick={() => handlePageChange(1)}
               disabled={currentPage === 1}
             />
             <Button
@@ -152,7 +125,7 @@ const Table = ({ columns, data, onRowSelect, paginator = false, height }) => {
               className="aspect-square"
               pill
               color="text"
-              onClick={handlePrevPage}
+              onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
             />
             <Button
@@ -160,7 +133,7 @@ const Table = ({ columns, data, onRowSelect, paginator = false, height }) => {
               className="aspect-square"
               pill
               color="text"
-              onClick={handleNextPage}
+              onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
             />
             <Button
@@ -168,7 +141,7 @@ const Table = ({ columns, data, onRowSelect, paginator = false, height }) => {
               className="aspect-square"
               pill
               color="text"
-              onClick={handleLastPage}
+              onClick={() => handlePageChange(totalPages)}
               disabled={currentPage === totalPages}
             />
           </div>

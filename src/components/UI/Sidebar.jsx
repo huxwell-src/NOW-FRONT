@@ -25,6 +25,7 @@ export function Sidebar({ children }) {
   const [user, setUser] = useState(null);
   const [expanded, setExpanded] = useState(true);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [sidebarVisible, setSidebarVisible] = useState(true);
 
   const handleLogout = () => {
     removeUserToken();
@@ -74,8 +75,8 @@ export function Sidebar({ children }) {
   return (
     <div className="flex h-screen">
       <aside
-        className={`bg-white fixed z-[999] sm:z-auto h-full sm:static trantision-all duration-200 border-r shadow-sm
-      ${expanded ? "w-68" : "w-[4.5rem]"}`}
+        className={`bg-white fixed z-[999] sm:block sm:z-auto h-full sm:static transition-all duration-200 border-r shadow-sm
+    ${expanded && sidebarVisible ? "w-68" : "w-[4.5rem] hidden"}`}
       >
         <nav className="h-full flex flex-col">
           <div className="p-4 pb-2 flex justify-between items-center">
@@ -113,12 +114,6 @@ export function Sidebar({ children }) {
                   />
                 )
               }
-            />
-
-            <Button
-              className="fixed sm:hidden bottom-4 right-4 aspect-square"
-              pill
-              icon={faExpand}
             />
           </div>
 
@@ -171,6 +166,26 @@ export function Sidebar({ children }) {
         </nav>
       </aside>
       <main className="flex-1 bg-slate-100 overflow-x-hidden overflow-y-auto">
+      <Button
+          onClick={() => setExpanded((curr) => !curr)}
+          className={`absolute bottom-4 right-4 z-50 block sm:hidden aspect-square !rounded-full
+            transition-all duration-300
+          `}
+          size="sm"
+          label={
+            expanded ? (
+              <FontAwesomeIcon
+                className="rounded-lg text-gray-100 "
+                icon={faArrowLeft}
+              />
+            ) : (
+              <FontAwesomeIcon
+                className="rounded-lg  text-gray-100"
+                icon={faArrowRight}
+              />
+            )
+          }
+        />
         <div className="container mx-auto">{children}</div>
       </main>
     </div>

@@ -8,7 +8,6 @@ import {
   faChalkboardUser,
   faArrowRight,
   faScrewdriverWrench,
-  faExpand,
   faArrowRightFromBracket,
   faTicket,
   faToolbox,
@@ -16,6 +15,7 @@ import {
 import { Tooltip } from "primereact/tooltip";
 import { getUserToken } from "../../api/userService";
 import { Link, useLocation } from "react-router-dom";
+import { IoMenu } from "react-icons/io5";
 import Button from "./Button";
 import { removeUserToken } from "../../api/userService";
 
@@ -86,7 +86,7 @@ export function Sidebar({ children }) {
                 className={`overflow-hidden transition-all duration-200
                 ${expanded ? "h-8" : "w-0"}`}
                 src="https://i.ibb.co/j3dmr5L/logo-white.jpg"
-                alt="Your Company"
+                alt="Logo now"
               />
               <span
                 className={`text-3xl font-bold text-gray-800 overflow-hidden transition-all
@@ -154,7 +154,7 @@ export function Sidebar({ children }) {
                           icon={faArrowRightFromBracket}
                           size="sm"
                           iconClassName="rounded-lg bg-gray-50 hover:bg-gray-100 text-xl text-primary-900"
-                          onClick={handleLogout} // Asigna la función handleLogout al evento onClick
+                          onClick={handleLogout}
                         />
                       </div>
                     </div>
@@ -166,26 +166,29 @@ export function Sidebar({ children }) {
         </nav>
       </aside>
       <main className="flex-1 bg-slate-100 overflow-x-hidden overflow-y-auto">
-      <Button
-          onClick={() => setExpanded((curr) => !curr)}
-          className={`absolute bottom-4 right-4 z-50 block sm:hidden aspect-square !rounded-full
-            transition-all duration-300
-          `}
-          size="sm"
-          label={
-            expanded ? (
-              <FontAwesomeIcon
-                className="rounded-lg text-gray-100 "
-                icon={faArrowLeft}
-              />
-            ) : (
-              <FontAwesomeIcon
-                className="rounded-lg  text-gray-100"
-                icon={faArrowRight}
-              />
-            )
-          }
-        />
+        <div className="bg-white sm:hidden border p-2 border-slate-200 flex justify-between items-center mx-4 mt-2 rounded-lg ">
+          <Button
+            onClick={() => setExpanded((curr) => !curr)}
+            className={`sm:hidden aspect-square
+            transition-all duration-300 !p-1 `}
+            color="text"
+            label={
+              <div className="rounded-lg bg-gray-50 text-primary-900 hover:bg-gray-100 text-2xl">
+                <IoMenu />
+              </div>
+            }
+          />
+          <div className="flex justify-center items-center mx-2">
+            <img
+              className="overflow-hidden transition-all duration-200 h-5"
+              src="https://i.ibb.co/j3dmr5L/logo-white.jpg"
+              alt="Logo now"
+            />
+            <span className="text-xl font-bold text-gray-800 overflow-hidden transition-all w-auto ml-3">
+              NOW
+            </span>
+          </div>
+        </div>
         <div className="container mx-auto">{children}</div>
       </main>
     </div>

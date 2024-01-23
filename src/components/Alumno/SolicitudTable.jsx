@@ -219,7 +219,6 @@ class SolicitudTable extends Component {
       { name: "ID", content: (row) => row.id_producto },
       { name: "Nombre", content: (row) => row.nombre },
       { name: "Cantidad", content: (row) => row.cantidad },
-      { name: "Nota", content: (row) => row.nota || "No hay notas" },
     ];
 
     return (

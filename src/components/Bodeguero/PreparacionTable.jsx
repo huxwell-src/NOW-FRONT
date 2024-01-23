@@ -1,21 +1,14 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faExclamationCircle,
-  faCheckCircle,
-  faTimesCircle,
-  faChevronRight,
-  faPlus,
-  faTimes,
-  faCheck,
-} from "@fortawesome/free-solid-svg-icons";
+import { faTimes } from "@fortawesome/free-solid-svg-icons";
 import Table from "../UI/Table";
 import Button from "../UI/Button";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { InputTextarea } from "primereact/inputtextarea";
-import { Toast } from "primereact/toast";
 import { Dialog } from "primereact/dialog";
+import Header from "../UI/Header";
+import toast, { Toaster } from "react-hot-toast";
 
 const PreparacionTable = () => {
   const [solicitudes, setSolicitudes] = useState([]);
@@ -23,49 +16,44 @@ const PreparacionTable = () => {
   const [visible, setVisible] = useState(false);
   const [notaDialogVisible, setNotaDialogVisible] = useState(false);
   const [nota, setNota] = useState("");
-  const toast = useRef();
+
+  const fetchData = async () => {
+    try {
+      const token = Cookies.get("token");
+
+      if (!token) {
+        console.error("Token no encontrado en las cookies");
+        return;
+      }
+
+      const config = {
+        headers: {
+          Authorization: `Token ${token}`,
+        },
+      };
+
+      const solicitudesResponse = await axios.get(
+        "http://127.0.0.1:8000/api/solicitudes",
+        config
+      );
+
+      const solicitudesEnPreparacion = solicitudesResponse.data.filter(
+        (solicitud) => solicitud.estado === "en preparación"
+      );
+
+      setSolicitudes(solicitudesEnPreparacion);
+    } catch (error) {
+      console.error("Error al obtener las solicitudes:", error);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const token = Cookies.get("token");
-
-        if (!token) {
-          console.error("Token no encontrado en las cookies");
-          return;
-        }
-
-        const config = {
-          headers: {
-            Authorization: `Token ${token}`,
-          },
-        };
-
-        const solicitudesResponse = await axios.get(
-          "http://127.0.0.1:8000/api/solicitudes",
-          config
-        );
-
-        const solicitudesEnPreparacion = solicitudesResponse.data.filter(
-          (solicitud) => solicitud.estado === "en preparación"
-        );
-
-        setSolicitudes(solicitudesEnPreparacion);
-      } catch (error) {
-        console.error("Error al obtener las solicitudes:", error);
-      }
-    };
-
     fetchData();
   }, []);
 
   const showDetailsDialog = (rowData) => {
     setSelectedSolicitud(rowData);
     setVisible(true);
-  };
-
-  const hideDetailsDialog = () => {
-    setVisible(false);
   };
 
   const formatFecha = (fecha) => {
@@ -80,10 +68,15 @@ const PreparacionTable = () => {
     return `${formattedDay}/${formattedMonth}/${year}`;
   };
 
+  const hideDetailsDialog = (shouldHide = true) => {
+    setVisible(!shouldHide);
+    if (shouldHide) {
+      fetchData();
+    }
+  };
+
   const handleCompletada = async () => {
     try {
-      const { selectedSolicitud, nota } = this.state;
-
       if (!selectedSolicitud) {
         console.error("No hay solicitud seleccionada para completar");
         return;
@@ -112,17 +105,12 @@ const PreparacionTable = () => {
 
       console.log("Solicitud completada:", completadaResponse.data);
 
-      toast.current.show({
-        severity: "success",
-        summary: "Solicitud Completada",
-        detail: "La solicitud se ha completado correctamente.",
-        life: 3000,
-      });
-
-      setVisible(false);
       setNotaDialogVisible(false);
       setNota(""); // Limpia el contenido de la nota
+      toast.success("Solicitud preparada correctamente");
+      hideDetailsDialog(); // Cierra el diálogo de detalles
     } catch (error) {
+      toast.success("Solicitud no actualizada :c");
       console.error("Error al completar la solicitud:", error);
     }
   };
@@ -132,6 +120,10 @@ const PreparacionTable = () => {
   };
 
   const hideNotaDialog = () => {
+    setNotaDialogVisible(false);
+  };
+
+  const handleGuardarNota = () => {
     setNotaDialogVisible(false);
   };
 
@@ -177,13 +169,44 @@ const PreparacionTable = () => {
 
   return (
     <>
+      <Toaster />
+      <Header
+        title="Solictudes Pendientes"
+        subtitle="Solicitudes de productos pendientes de"
+        imageUrl="https://modernize-react.adminmart.com/assets/ChatBc-d3c45db6.png"
+      />
       <div className="m-4">
         <Table
           columns={columns}
           data={solicitudes}
           paginator
-          height="500px" // Ajusta la altura según tus necesidades
+          className="hidden sm:block"
         />
+
+        <div className="bg-white border border-slate-200 p-4 rounded-xl">
+          {solicitudes.map((solicitud) => (
+            <div key={solicitud.id_solicitud} className="text-gray-800 gap-4 ">
+              <div>
+                <h3 className="text-lg font-semibold">{`Solicitud #${solicitud.id_solicitud}`}</h3>
+                <Button
+                  
+                />
+              </div>
+              <p>
+                {" "}
+                <span className="font-medium text-gray-950">Alumno: </span>{" "}
+                {`${solicitud.usuario.nombre} ${solicitud.usuario.apellido}`}
+              </p>
+              <p>
+                {" "}
+                <span className="font-medium text-gray-950">
+                  Profesor:{" "}
+                </span>{" "}
+                {`${solicitud.usuario.nombre} ${solicitud.usuario.apellido}`}
+              </p>
+            </div>
+          ))}
+        </div>
 
         {/* Diálogo para mostrar los detalles de la solicitud seleccionada */}
         <Dialog
@@ -199,12 +222,7 @@ const PreparacionTable = () => {
                 color="danger"
                 onClick={hideDetailsDialog}
               />
-              <Button
-                label="Completada"
-                color="success"
-                icon="circle-xmark"
-                onClick={handleCompletada}
-              />
+              <Button label="Completada" onClick={handleCompletada} />
             </div>
           }
           maximizable
@@ -231,8 +249,6 @@ const PreparacionTable = () => {
                   <Button
                     className="mt-4 mr-4"
                     label="Añadir nota"
-                    icon={<FontAwesomeIcon icon={faPlus} />}
-                    rounded
                     onClick={showNotaDialog}
                   />
                 </div>
@@ -305,13 +321,7 @@ const PreparacionTable = () => {
               className="mx-2"
               onClick={hideNotaDialog}
             />
-            <Button
-              label="Guardar"
-              icon={<FontAwesomeIcon icon={faCheck} />}
-              rounded
-              severity="success"
-              onClick={handleCompletada}
-            />
+            <Button label="Guardar" onClick={handleGuardarNota} />
           </div>
         </Dialog>
       </div>

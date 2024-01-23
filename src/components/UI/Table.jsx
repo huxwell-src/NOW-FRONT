@@ -8,7 +8,7 @@ import {
   faAnglesRight,
 } from "@fortawesome/free-solid-svg-icons";
 
-const Table = ({ columns, data, onRowSelect, paginator = false, height }) => {
+const Table = ({ columns, data, onRowSelect, paginator = false, height, className }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(25);
   const [selectedRows, setSelectedRows] = useState([]);
@@ -57,11 +57,11 @@ const Table = ({ columns, data, onRowSelect, paginator = false, height }) => {
   };
   return (
     <div
-      className="overflow-x-auto border border-slate-200 rounded-xl"
-      style={{ height: height || "auto" }}
+      className={`overflow-x-auto border border-slate-200 rounded-xl  ${className}   ` }
+      style={{ height: height || "auto" } }
     >
       <div className="relative" ref={tableRef} onScroll={handleScroll}>
-        <table className="min-w-full bg-white">
+        <table className={`min-w-full bg-white` }>
           <thead>
             {columns.map((column, columnIndex) => (
               <th

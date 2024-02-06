@@ -67,7 +67,7 @@ const Table = ({ columns, data, onRowSelect, paginator = false, height, classNam
               <th
                 key={columnIndex}
                 className={`font-semibold text-lg tracking-wider table-cell align-middle text-left py-4 px-4 text-slate-900 border-b border-slate-200 sticky top-0 bg-white ${
-                  column.center ? "text-center" : "" // Aplica la clase text-center si la propiedad center está presente
+                  column.center ? "text-center" : "" 
                 }`}
               >
                 {column.name}

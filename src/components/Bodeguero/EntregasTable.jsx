@@ -1,75 +1,51 @@
-import React, { Component } from "react";
-import { DataTable } from "primereact/datatable";
-import { Column } from "primereact/column";
+import { useState, useEffect  } from "react";
+import toast, { Toaster } from "react-hot-toast";
 import { Dialog } from "primereact/dialog";
-import { Button } from "primereact/button";
+import Button from "../UI/Button";
 import axios from "axios";
+import Table from "../UI/Table";
+import Header from "../UI/Header";
 import Cookies from "js-cookie";
 import { InputTextarea } from "primereact/inputtextarea";
-import { Toast } from "primereact/toast";
+import { faPlus } from "@fortawesome/free-solid-svg-icons";
 
-class EntregaTable extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      solicitudes: [],
-      selectedSolicitud: null,
-      visible: false,
-      notaDialogVisible: false, // Nuevo estado para controlar la visibilidad del diálogo de la nota
-      nota: "", // Nuevo estado para almacenar el contenido de la nota
-    };
-    this.toast = React.createRef(); // Referencia al componente Toast
+const EntregaTable = () => {
+  const [solicitudes, setSolicitudes] = useState([]);
+  const [selectedSolicitud, setSelectedSolicitud] = useState(null);
+  const [visible, setVisible] = useState(false);
+  const [notaDialogVisible, setNotaDialogVisible] = useState(false);
+  const [nota, setNota] = useState("");
 
-  }
-
-  async componentDidMount() {
-    try {
-      // Obtener el token de las cookies
-      const token = Cookies.get("token");
-
-      // Verificar si el token está presente
-      if (!token) {
-        console.error("Token no encontrado en las cookies");
-        return;
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const token = Cookies.get("token");
+        if (!token) {
+          console.error("Token no encontrado en las cookies");
+          return;
+        }
+        const config = {
+          headers: {
+            Authorization: `Token ${token}`,
+          },
+        };
+        const solicitudesResponse = await axios.get(
+          "http://127.0.0.1:8000/api/solicitudes",
+          config
+        );
+        const solicitudesAprobadas = solicitudesResponse.data.filter(
+          (solicitud) => solicitud.estado === "Listo para retiro"
+        );
+        setSolicitudes(solicitudesAprobadas);
+      } catch (error) {
+        console.error("Error al obtener las solicitudes:", error);
       }
+    };
 
-      // Configurar el encabezado de la solicitud con el token
-      const config = {
-        headers: {
-          Authorization: `Token ${token}`,
-        },
-      };
+    fetchData();
+  }, []);
 
-      // Obtener todas las solicitudes desde el endpoint
-      const solicitudesResponse = await axios.get(
-        "http://127.0.0.1:8000/api/solicitudes",
-        config
-      );
-
-      // Filtrar las solicitudes con estado "aprobado"
-      const solicitudesAprobadas = solicitudesResponse.data.filter(
-        (solicitud) => solicitud.estado === "Listo para retiro"
-      );
-
-      // Establecer el estado del componente con las solicitudes aprobadas
-      this.setState({
-        solicitudes: solicitudesAprobadas,
-      });
-    } catch (error) {
-      console.error("Error al obtener las solicitudes:", error);
-    }
-  }
-
-  showDetailsDialog = (rowData) => {
-    this.setState({ visible: true, selectedSolicitud: rowData });
-  };
-
-  hideDetailsDialog = () => {
-    this.setState({ visible: false });
-  };
-
-  // Función para formatear las fechas en DD/MM/YYYY
-  formatFecha(fecha) {
+  const formatFecha = (fecha) => {
     const date = new Date(fecha);
     const day = date.getDate();
     const month = date.getMonth() + 1;
@@ -79,263 +55,231 @@ class EntregaTable extends Component {
     const formattedMonth = month < 10 ? `0${month}` : month;
 
     return `${formattedDay}/${formattedMonth}/${year}`;
-  }
+  };
 
-  handleCompletada = async () => {
+  const showDetailsDialog = (rowData) => {
+    setSelectedSolicitud(rowData);
+    setVisible(true);
+  };
+
+  const hideDetailsDialog = () => {
+    setVisible(false);
+  };
+
+  const handleCompletada = async () => {
     try {
-      const { selectedSolicitud, nota } = this.state;
-  
-      // Verificar si hay una solicitud seleccionada
-      if (!selectedSolicitud) {
-        console.error("No hay solicitud seleccionada para completar");
-        return;
-      }
-  
-      // Obtener el token de las cookies
       const token = Cookies.get("token");
-  
-      // Configurar el encabezado de la solicitud con el token
       const config = {
         headers: {
           Authorization: `Token ${token}`,
         },
       };
-  
-      // Detalles de la solicitud a completar
       const solicitudData = {
         id_solicitud: selectedSolicitud.id_solicitud,
         usuario: selectedSolicitud.usuario.id_user,
         estado: "Entregado",
         nota: nota,
       };
-  
-      // Realizar la solicitud PUT
       const completadaResponse = await axios.put(
         `http://127.0.0.1:8000/api/solicitudes/${solicitudData.id_solicitud}`,
         solicitudData,
         config
       );
-  
-      // Imprimir la información en la consola
       console.log("Solicitud completada:", completadaResponse.data);
-  
-      // Puedes realizar alguna lógica adicional después de completar la solicitud si es necesario
-  
-      // Mostrar Toast de éxito
-      this.toast.current.show({
-        severity: "success",
-        summary: "Entrega Exitosa",
-        detail: "La solicitud se ha marcado como entregada correctamente.",
-        life: 3000,
-      });
-  
-      // Actualizar la tabla después de completar la solicitud
-      this.componentDidMount();
-  
-      // Cerrar el diálogo después de completar la solicitud
-      this.hideDetailsDialog();
+      toast.success("Entrega Exitosa")
+      const fetchData = async () => {
+        try {
+          const solicitudesResponse = await axios.get(
+            "http://127.0.0.1:8000/api/solicitudes",
+            config
+          );
+          const solicitudesAprobadas = solicitudesResponse.data.filter(
+            (solicitud) => solicitud.estado === "Listo para retiro"
+          );
+          setSolicitudes(solicitudesAprobadas);
+        } catch (error) {
+          console.error("Error al obtener las solicitudes:", error);
+        }
+      };
+      fetchData();
+      hideDetailsDialog();
     } catch (error) {
       console.error("Error al completar la solicitud:", error);
     }
   };
 
-  // Método para mostrar el diálogo de la nota
-  showNotaDialog = () => {
-    this.setState({ notaDialogVisible: true });
+  const showNotaDialog = () => {
+    setNotaDialogVisible(true);
   };
 
-  // Método para ocultar el diálogo de la nota
-  hideNotaDialog = () => {
-    this.setState({ notaDialogVisible: false });
+  const hideNotaDialog = () => {
+    setNotaDialogVisible(false);
   };
 
-  render() {
-    const { solicitudes, selectedSolicitud, visible, notaDialogVisible, nota } =
-      this.state;
+  const footerContent = (
+    <div>
+      <Button
+        label="Cerrar"
+        color="danger"
+        onClick={hideDetailsDialog}
+      />
+      <Button
+        label="Entregado"
+        onClick={handleCompletada}
+      />
+    </div>
+  );
 
-    const footerContent = (
-      <div>
+  const columns = [
+    {
+      name: "Alumno",
+      key: "usuario",
+      content: (rowData) =>
+        `${rowData.usuario.nombre} ${rowData.usuario.apellido}`,
+    },
+    {
+      name: "Curso",
+      key: "usuario",
+      content: (rowData) => rowData.usuario.curso,
+    },
+    {
+      name: "Carrera",
+      key: "usuario",
+      content: (rowData) =>
+        rowData.usuario.carreras.map((carrera) => carrera.nombre),
+    },
+    {
+      name: "Profesor",
+      key: "profesor",
+      content: (rowData) =>
+        `${rowData.profesor.nombre} ${rowData.profesor.apellido}`,
+    },
+    {
+      name: "Acciones",
+      key: "acciones",
+      content: (rowData) => (
         <Button
-          label="Cerrar"
-          severity="danger"
-          text
-          rounded
-          size="small"
-          icon="pi pi-times"
-          onClick={this.hideDetailsDialog}
+          label="Detalles"
+          color="text"
+          className="text-sky-700 font-semibold"
+          onClick={() => showDetailsDialog(rowData)}
         />
-        <Button
-          label="Entregado"
-          severity="success"
-          rounded
-          size="small"
-          icon="pi pi-check"
-          autoFocus
-          onClick={this.handleCompletada} // Agrega esta línea para manejar la acción de completar
+      ),
+    },
+  ];
+
+  const detail = [
+    {
+      name: "ID",
+      key: "id_producto",
+      content: (rowData) => rowData.id_producto,
+    },
+    {
+      name: "Producto",
+      key: "nombre",
+      content: (rowData) => rowData.nombre,
+    },
+    {
+      name: "Cantidad",
+      key: "cantidad",
+      content: (rowData) => rowData.cantidad,
+    },
+  ];
+
+  return (
+    <>
+      <Toaster/>
+      <Header
+        title="Solictudes Por Entregar"
+        subtitle="Solicitudes de productos pendientes de entregar"
+        imageUrl="https://modernize-react.adminmart.com/assets/ChatBc-d3c45db6.png"
+      />
+      <div className="m-4">
+        <Table
+          columns={columns}
+          data={solicitudes}
+          emptyMessage="No hay solicitudes disponibles."
         />
       </div>
-    );
 
-    return (
-      <>
-        <Toast ref={this.toast} />
+      <Dialog
+        header="Detalles de la solicitud"
+        visible={visible}
+        onHide={hideDetailsDialog}
+        breakpoints={{ "960px": "75vw", "641px": "100vw" }}
+        style={{ width: "50vw" }}
+        footer={footerContent}
+        maximizable
+      >
+        {selectedSolicitud && (
+          <>
+            <div className="flex justify-between">
+              <div className="my-4">
+                <h2 className="text-lg font-semibold">Datos generales: </h2>
+                <p className="font-medium text-base">
+                  Fecha de creación:
+                  <span className="font-normal mx-2">
+                    {formatFecha(selectedSolicitud.fecha_creacion)}
+                  </span>
+                </p>
 
-        {/* Tabla de todas las solicitudes */}
-        <DataTable
-          value={solicitudes}
-          emptyMessage="No hay solicitudes disponibles."
-        >
-          <Column field="id_solicitud" header="ID de solicitud" />
-          <Column
-            field="usuario"
-            header="Alumno"
-            body={(rowData) => (
-              <span>
-                {rowData.usuario.nombre} {rowData.usuario.apellido}
-              </span>
-            )}
-          />
-          <Column
-            field="usuario"
-            header="Alumno"
-            body={(rowData) => <span>{rowData.usuario.curso}</span>}
-          />
-          <Column
-            field="usuario"
-            header="Carrera"
-            body={(rowData) => (
-              <span>
-                {rowData.usuario.carreras.map((carrera) => (
-                  <div key={carrera.id}>{carrera.nombre}</div>
-                ))}
-              </span>
-            )}
-          />
-          <Column
-            field="profesor"
-            header="Profesor"
-            body={(rowData) => (
-              <span>
-                {rowData.profesor.nombre} {rowData.profesor.apellido}
-              </span>
-            )}
-          />
-
-          {/* Botón para ver detalles de la solicitud */}
-          <Column
-            body={(rowData) => (
-              <>
-                <Button
-                  size="small"
-                  rounded
-                  text
-                  icon="pi pi-chevron-right"
-                  iconPos="right"
-                  label="Detalles"
-                  className="text-sky-500"
-                  onClick={() => this.showDetailsDialog(rowData)}
-                />
-              </>
-            )}
-          />
-        </DataTable>
-
-        {/* Diálogo para mostrar los detalles de la solicitud seleccionada */}
-        <Dialog
-          header="Detalles de la solicitud"
-          visible={visible}
-          onHide={this.hideDetailsDialog}
-          breakpoints={{ "960px": "75vw", "641px": "100vw" }}
-          style={{ width: "50vw" }}
-          footer={footerContent}
-          maximizable
-        >
-          {selectedSolicitud && (
-            <>
-              {/* Datos generales de la solicitud */}
-              <div className="flex justify-between">
-                <div className="my-4">
-                  <h2 className="text-lg font-semibold">Datos generales: </h2>
-                  <p className="font-medium text-base">
-                    Fecha de creación:
-                    <span className="font-normal mx-2">
-                      {this.formatFecha(selectedSolicitud.fecha_creacion)}
-                    </span>
-                  </p>
-
-                  <p className="font-medium text-base">
-                    Fecha de devolución:
-                    <span className="font-normal mx-2">
-                      {this.formatFecha(selectedSolicitud.fecha_entrega)}
-                    </span>
-                  </p>
-                </div>
-                <div>
-                  <Button
-                    className="mt-4 mr-4"
-                    label="Añadir nota"
-                    icon="pi pi-plus"
-                    rounded
-                    onClick={this.showNotaDialog}
-                  />
-                </div>
+                <p className="font-medium text-base">
+                  Fecha de devolución:
+                  <span className="font-normal mx-2">
+                    {formatFecha(selectedSolicitud.fecha_entrega)}
+                  </span>
+                </p>
               </div>
-              {/* Tabla de productos */}
-              {selectedSolicitud.productos &&
-                selectedSolicitud.productos.length > 0 && (
-                  <>
-                    <h2 className="text-lg font-semibold">Productos:</h2>
-                    <DataTable value={selectedSolicitud.productos}>
-                      <Column field="id_producto" header="ID" />
-                      <Column field="nombre" header="Producto" />
-                      <Column field="cantidad" header="Cantidad" />
-                    </DataTable>
-                  </>
-                )}
-            </>
-          )}
-        </Dialog>
+              <div>
+                <Button
+                  label="Añadir nota"
+                  icon={faPlus}
+                  iconClassName="ml-2"
+                  rounded
+                  onClick={showNotaDialog}
+                />
+              </div>
+            </div>
+            {selectedSolicitud.productos &&
+              selectedSolicitud.productos.length > 0 && (
+                <>
+                  <h2 className="text-lg font-semibold">Productos:</h2>
+                  <Table columns={detail} data={selectedSolicitud.productos} />
+                </>
+              )}
+          </>
+        )}
+      </Dialog>
 
-        {/* Diálogo para añadir la nota */}
-        <Dialog
-          header="Añadir Nota"
-          visible={notaDialogVisible}
-          onHide={this.hideNotaDialog}
-          breakpoints={{ "960px": "50vw", "641px": "100vw" }}
-          style={{ width: "30vw" }}
-        >
-          <div className="my-4">
-            <h2 className="text-lg font-semibold">Añadir Nota:</h2>
-            <InputTextarea
-              rows={5}
-              className="w-full"
-              value={nota}
-              onChange={(e) => this.setState({ nota: e.target.value })}
-            />
-          </div>
-          <div className="flex justify-end">
-            <Button
-              label="Cancelar"
-              icon="pi pi-times"
-              rounded
-              severity="danger"
-              className="mx-2"
-              onClick={this.hideNotaDialog}
-            />
-            <Button
-              label="Guardar"
-              icon="pi pi-check"
-              rounded
-              severity="success"
-              onClick={() => {
-                this.hideNotaDialog();
-              }}
-            />
-          </div>
-        </Dialog>
-      </>
-    );
-  }
-}
+      <Dialog
+        header="Añadir Nota"
+        visible={notaDialogVisible}
+        onHide={hideNotaDialog}
+        breakpoints={{ "960px": "50vw", "641px": "100vw" }}
+        style={{ width: "30vw" }}
+      >
+        <div className="my-4">
+          <h2 className="text-lg font-semibold">Añadir Nota:</h2>
+          <InputTextarea
+            rows={5}
+            className="w-full"
+            value={nota}
+            onChange={(e) => setNota(e.target.value)}
+          />
+        </div>
+        <div className="flex justify-end gap-2">
+          <Button
+            label="Cancelar"
+            onClick={hideNotaDialog}
+          />
+          <Button
+            label="Guardar"
+            onClick={hideNotaDialog}
+          />
+        </div>
+      </Dialog>
+    </>
+  );
+};
 
 export default EntregaTable;

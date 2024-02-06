@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import { Component } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { Navigate } from "react-router-dom";
@@ -17,7 +17,7 @@ class Login extends Component {
       user: null,
       errorMessage: "",
       loggedIn: false,
-      loading: false, // Nuevo estado para indicar si la carga está en progreso
+      loading: false, 
     };
   }
 
@@ -98,7 +98,7 @@ class Login extends Component {
               <div className="loading-dot"></div>
             </div>
           </div>
-        )}
+        )} 
 
         {!this.state.loading && (
           <div className="bg-white p-2 rounded-xl sm:shadow-custom w-screen sm:w-auto">

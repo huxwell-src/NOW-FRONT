@@ -54,14 +54,13 @@ const Button = ({
       type={type}
       disabled={disabled}
     >
-      {label} 
       {icon && (
         <FontAwesomeIcon
           className={iconClassName} // Usar las clases del icono proporcionadas
           icon={icon}
         />
       )}
-      
+      {label} 
     </button>
   );
 };

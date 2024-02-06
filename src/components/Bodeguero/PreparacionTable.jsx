@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTimes } from "@fortawesome/free-solid-svg-icons";
+import { faPlus, faTimes } from "@fortawesome/free-solid-svg-icons";
 import Table from "../UI/Table";
 import Button from "../UI/Button";
 import axios from "axios";
@@ -171,8 +171,8 @@ const PreparacionTable = () => {
     <>
       <Toaster />
       <Header
-        title="Solictudes Pendientes"
-        subtitle="Solicitudes de productos pendientes de"
+        title="Solictudes Por Preparar"
+        subtitle="Solicitudes de productos pendientes de preparar"
         imageUrl="https://modernize-react.adminmart.com/assets/ChatBc-d3c45db6.png"
       />
       <div className="m-4">
@@ -183,30 +183,6 @@ const PreparacionTable = () => {
           className="hidden sm:block"
         />
 
-        <div className="bg-white border border-slate-200 p-4 rounded-xl">
-          {solicitudes.map((solicitud) => (
-            <div key={solicitud.id_solicitud} className="text-gray-800 gap-4 ">
-              <div>
-                <h3 className="text-lg font-semibold">{`Solicitud #${solicitud.id_solicitud}`}</h3>
-                <Button
-                  
-                />
-              </div>
-              <p>
-                {" "}
-                <span className="font-medium text-gray-950">Alumno: </span>{" "}
-                {`${solicitud.usuario.nombre} ${solicitud.usuario.apellido}`}
-              </p>
-              <p>
-                {" "}
-                <span className="font-medium text-gray-950">
-                  Profesor:{" "}
-                </span>{" "}
-                {`${solicitud.usuario.nombre} ${solicitud.usuario.apellido}`}
-              </p>
-            </div>
-          ))}
-        </div>
 
         {/* Diálogo para mostrar los detalles de la solicitud seleccionada */}
         <Dialog
@@ -249,6 +225,8 @@ const PreparacionTable = () => {
                   <Button
                     className="mt-4 mr-4"
                     label="Añadir nota"
+                    icon={faPlus}
+                    iconClassName="mx-2"
                     onClick={showNotaDialog}
                   />
                 </div>

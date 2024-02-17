@@ -8,7 +8,7 @@ class TableAlumnos extends Component {
     return (
       <>
         {/* Componente de tabla de usuarios con rol "Alumno" */}
-        <UserCrudTable userRole="Alumno" oneCarrera={true} />
+        <UserCrudTable userRole="" oneCarrera={true} />
       </>
     );
   }

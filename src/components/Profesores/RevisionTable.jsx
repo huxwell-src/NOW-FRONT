@@ -265,17 +265,11 @@ const RevisionTable = () => {
     <div>
       <Button
         label="Rechazar"
-        color="text"
-        icon={faX}
-        iconClassName="mx-1"
-        className="text-red-600 font-semibold"
+        color="danger"
         onClick={enviarRechazo}
       />
       <Button
         label="Autorizar"
-        color="success"
-        icon={faCheck}
-        iconClassName="mx-1"
         disabled={allButtonsActivated}
         onClick={enviarFormulario}
       />
@@ -356,7 +350,7 @@ const RevisionTable = () => {
         <InputTextarea
           id="username"
           rows={5}
-          className="w-full"
+          className="!w-full input"
           value={nota}
           onChange={handleNotaChange}
         />

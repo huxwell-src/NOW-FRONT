@@ -202,6 +202,7 @@ const PendientesTable = () => {
     <div>
       <Button
         label="Cerrar"
+        color="danger"
         onClick={hideDetailsDialog}
       />
       <Button

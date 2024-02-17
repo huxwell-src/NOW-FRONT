@@ -1,17 +1,19 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { Dialog } from "primereact/dialog";
 import Header from "../UI/Header";
 import Table from "../UI/Table";
 import Button from "../UI/Button";
+import AddUserDialog from "./AddUserDialog";
+import { toast, Toaster } from "react-hot-toast";
 import {
   faFile,
   faFolderOpen,
   faPen,
-  faPlus,
   faTrash,
 } from "@fortawesome/free-solid-svg-icons";
+import { IoIosArrowForward, IoIosArrowDown } from "react-icons/io";
 
 const UserCrudTable = (props) => {
   const [users, setUsers] = useState([]);
@@ -21,19 +23,7 @@ const UserCrudTable = (props) => {
   const [selectedUserSolicitudes, setSelectedUserSolicitudes] = useState([]);
   const [solicitudesDialogVisible, setSolicitudesDialogVisible] =
     useState(false);
-
-  const [newUserDialogVisible, setNewUserDialogVisible] = useState(false);
-  const [newUser, setNewUser] = useState({
-    rut: "",
-    nombre: "",
-    apellido: "",
-    email: "",
-    curso: "",
-    carrera: [],
-    solicitudes: [],
-  });
-
-  const toastRef = useRef(null);
+  const [expandedRows, setExpandedRows] = useState([]);
 
   useEffect(() => {
     fetchUsers();
@@ -82,97 +72,18 @@ const UserCrudTable = (props) => {
       .delete(`http://127.0.0.1:8000/api/delete/${id_user}`, config)
       .then(() => {
         fetchUsers();
-        hideDeleteUserDialog();
-
-        toastRef.current.show({
-          severity: "success",
-          summary: "Eliminacion",
-          detail: "Usuario eliminado",
-          life: 3000,
-        });
+        setDeleteUserDialogVisible(false);
+        toast.success("Usuario Eliminado");
       })
       .catch((error) => {
         console.error("Error deleting user:", error);
-        hideDeleteUserDialog();
-
-        toastRef.current.show({
-          severity: "error",
-          summary: "error",
-          detail: "Error al eliminar usuario",
-          life: 3000,
-        });
+        setDeleteUserDialogVisible(false);
+        toast.error("Error al Eliminar");
       });
   };
 
   const handleGlobalFilter = (event) => {
     setGlobalFilter(event.target.value);
-  };
-
-  const handleClearGlobalFilter = () => {
-    setGlobalFilter("");
-  };
-
-  const showNewUserDialog = () => {
-    setNewUserDialogVisible(true);
-  };
-
-  const hideNewUserDialog = () => {
-    setNewUserDialogVisible(false);
-    setNewUser({
-      rut: "",
-      nombre: "",
-      apellido: "",
-      email: "",
-      curso: "",
-      carrera: [],
-      solicitudes: [],
-    });
-  };
-
-  const saveNewUserToApi = () => {
-    if (
-      !newUser.rut ||
-      !newUser.nombre ||
-      !newUser.apellido ||
-      !newUser.email ||
-      !newUser.curso ||
-      newUser.carrera.length === 0
-    ) {
-      console.error("Por favor, complete todos los campos.");
-      return;
-    }
-
-    const token = Cookies.get("token");
-    const config = {
-      headers: {
-        Authorization: `Token ${token}`,
-      },
-    };
-
-    const password = newUser.apellido.charAt(0).toUpperCase() + newUser.rut;
-
-    const newUserWithRole = {
-      ...newUser,
-      rol: props.userRole,
-      password: password,
-    };
-
-    axios
-      .post("http://127.0.0.1:8000/api/create", newUserWithRole, config)
-      .then(() => {
-        toastRef.current.show({
-          severity: "success",
-          summary: "Creación",
-          detail: "El usuario ha sido creado exitosamente",
-          life: 3000,
-        });
-        fetchUsers();
-        hideNewUserDialog();
-      })
-      .catch((error) => {
-        console.error("Error al crear el usuario:", error);
-        hideNewUserDialog();
-      });
   };
 
   const fetchUserSolicitudes = (userId) => {
@@ -197,9 +108,10 @@ const UserCrudTable = (props) => {
   const handleViewSolicitudes = (userId) => {
     fetchUserSolicitudes(userId)
       .then((solicitudes) => {
-        // Filtrar las solicitudes por el ID del usuario
         const userSolicitudes = solicitudes.filter(
-          (solicitud) => solicitud.usuario.id_user === userId
+          (solicitud) =>
+            solicitud.usuario.id_user === userId ||
+            solicitud.profesor.id_user === userId
         );
         setSelectedUserSolicitudes(userSolicitudes);
         setSolicitudesDialogVisible(true);
@@ -209,24 +121,35 @@ const UserCrudTable = (props) => {
       });
   };
 
+  const handleRowToggle = (userId) => {
+    if (expandedRows.includes(userId)) {
+      setExpandedRows(expandedRows.filter((id) => id !== userId));
+    } else {
+      setExpandedRows([...expandedRows, userId]);
+    }
+  };
+
   const actions = (rowData) => {
     return (
       <div className="flex">
         <Button
           icon={faPen}
           color="text"
+          size="sm"
           className=" h-10 w-10 flex items-center justify-center"
           onClick={() => handleEditUser(rowData)}
         />
         <Button
           icon={faTrash}
           color="text"
+          size="sm"
           className=" h-10 w-10 flex items-center justify-center"
           onClick={() => handleDeleteUser(rowData.id)}
         />
         <Button
           icon={faFolderOpen}
           color="text"
+          size="sm"
           className=" h-10 w-10 flex items-center justify-center"
           onClick={() => handleViewSolicitudes(rowData.id_user)}
         />
@@ -238,6 +161,10 @@ const UserCrudTable = (props) => {
     {
       name: "Rut",
       content: (rowData) => rowData.rut,
+    },
+    {
+      name: "Tipo",
+      content: (rowData) => rowData.rol,
     },
     {
       name: "Nombre",
@@ -253,11 +180,12 @@ const UserCrudTable = (props) => {
     },
     {
       name: "Curso",
-      content: (rowData) => rowData.curso,
+      content: (rowData) => rowData.curso || "-",
     },
     {
       name: "Carrera",
-      content: (rowData) => rowData.carrera,
+      content: (rowData) =>
+        rowData.carrera.length > 0 ? rowData.carrera.join(", ") : "-",
     },
     {
       name: "Acciones",
@@ -265,8 +193,16 @@ const UserCrudTable = (props) => {
     },
   ];
 
+  const filteredUsers = users.filter(
+    (user) =>
+      user.nombre.toLowerCase().includes(globalFilter.toLowerCase()) ||
+      user.apellido.toLowerCase().includes(globalFilter.toLowerCase()) ||
+      user.rut.toLowerCase().includes(globalFilter.toLowerCase())
+  );
+
   return (
     <>
+      <Toaster />
       <Header
         title="Solictudes Pendientes"
         subtitle="Solicitudes de productos pendientes de ser entregados"
@@ -279,7 +215,9 @@ const UserCrudTable = (props) => {
             id="searchInput"
             type="text"
             placeholder="Buscar alumno..."
-            className="sm:w-[75%] border rounded-lg px-4 m-2 py-2 duration-150 focus:outline-none focus:ring-4 focus:border-sky-700"
+            className="sm:w-[75%] input m-2 "
+            value={globalFilter}
+            onChange={handleGlobalFilter}
           />
           <div className="flex items-center justify-end">
             <Button
@@ -289,18 +227,12 @@ const UserCrudTable = (props) => {
               iconClassName="mr-2 text-lg"
               size="sm"
             />
-            <Button
-              label="Agregar"
-              className="flex items-center m-2"
-              icon={faPlus}
-              iconClassName="mr-2 text-lg"
-              size="sm"
-            />
+            <AddUserDialog />
           </div>
         </div>
         <Table
           columns={columns}
-          data={users}
+          data={filteredUsers}
           paginator
           onRowSelect={(selectedRows) => console.log(selectedRows)}
         />
@@ -308,7 +240,7 @@ const UserCrudTable = (props) => {
       {/* Diálogo para eliminar usuario */}
       <Dialog
         visible={deleteUserDialogVisible}
-        onHide={() => setSolicitudesDialogVisible(false)}
+        onHide={() => setDeleteUserDialogVisible(false)}
         header="Confirmar Eliminación"
         modal
         footer={
@@ -316,15 +248,13 @@ const UserCrudTable = (props) => {
             <Button
               onClick={() => setDeleteUserDialogVisible(false)}
               label="Cancelar"
-              size="small"
+              color="danger"
+              size="sm"
             />
             <Button
               onClick={() => handleDeleteUserConfirmed(userToDeleteId)}
               label="Confirmar"
-              severity="success"
-              rounded
-              raised
-              size="small"
+              size="sm"
             />
           </div>
         }
@@ -341,33 +271,57 @@ const UserCrudTable = (props) => {
         style={{ width: "65vw" }}
         modal
       >
-        <Table
-          columns={[
-            {
-              name: "ID Solicitud",
-              content: (rowData) => rowData.id_solicitud,
-            },
-            {
-              name: "Fecha de Creación",
-              content: (rowData) => rowData.fecha_creacion,
-            },
-            {
-              name: "Fecha de Entrega",
-              content: (rowData) => rowData.fecha_entrega,
-            },
-            {
-              name: "Fecha de Devolución",
-              content: (rowData) => rowData.fecha_devolucion,
-            },
-            { name: "Estado", content: (rowData) => rowData.estado },
-            { name: "Aprobación", content: (rowData) => rowData.aprobacion },
-            {
-              name: "Nombre del Profesor",
-              content: (rowData) => rowData.profesor.nombre,
-            },
-          ]}
-          data={selectedUserSolicitudes}
-        />
+        {selectedUserSolicitudes.length === 0 ? (
+          <div className="text-center text-gray-500">
+            Sin solicitudes del usuario
+          </div>
+        ) : (
+          <Table
+            columns={[
+              {
+                name: "",
+                content: (rowData) => (
+                  <>
+                    <button onClick={() => handleRowToggle(rowData.id_user)}>
+                      {expandedRows.includes(rowData.id_user) ? (
+                        <button className="p-2 hover:bg-gray-300/70 transition-150  rounded-full ">
+                          <IoIosArrowDown />
+                        </button>
+                      ) : (
+                        <button className="p-2 hover:bg-gray-300/70 transition-150  rounded-full ">
+                          <IoIosArrowForward />
+                        </button>
+                      )}
+                    </button>
+                  </>
+                ),
+              },
+              {
+                name: "ID Solicitud",
+                content: (rowData) => rowData.id_solicitud,
+              },
+              {
+                name: "Fecha de Creación",
+                content: (rowData) => rowData.fecha_creacion,
+              },
+              {
+                name: "Fecha de Entrega",
+                content: (rowData) => rowData.fecha_entrega,
+              },
+              {
+                name: "Fecha de Devolución",
+                content: (rowData) => rowData.fecha_devolucion,
+              },
+              { name: "Estado", content: (rowData) => rowData.estado },
+              { name: "Aprobación", content: (rowData) => rowData.aprobacion },
+              {
+                name: "Profesor",
+                content: (rowData) => rowData.profesor.nombre,
+              },
+            ]}
+            data={selectedUserSolicitudes}
+          />
+        )}
       </Dialog>
     </>
   );

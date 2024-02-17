@@ -30,7 +30,7 @@ const Button = ({
       success:
         "bg-emerald-700 hover:bg-emerald-800 focus:ring-2 focus:ring-emerald-700 focus:ring-opacity-50 text-gray-900 text-white",
       danger:
-        "bg-red-500 hover:bg-red-600 focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 text-white",
+        "bg-red-100 text-red-500 hover:bg-red-200 focus:ring-2 focus:ring-red-500 focus:ring-opacity-50",
       text:
         "rounded-lg  text-primary-900 hover:bg-gray-100 !shadow-none ",
     },

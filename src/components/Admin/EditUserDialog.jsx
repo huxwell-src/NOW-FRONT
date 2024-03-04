@@ -1,119 +1,109 @@
-import React from "react";
-import { InputText } from "primereact/inputtext";
-import { Dropdown } from "primereact/dropdown";
+import { useState, useEffect } from "react";
 import { Dialog } from "primereact/dialog";
-import { Button } from "primereact/button";
+import { validate, clean, format } from "rut.js";
+import axios from "axios";
+import { toast } from "react-hot-toast";
+import Button from "../UI/Button";
+import Cookies from "js-cookie";
 
-const EditUserDialog = ({ visible, userToEdit, onHide, onSaveChanges }) => {
+const EditUserDialog = ({ visible, onClose, user }) => {
+  const [fields] = useState([
+    { name: "rut", label: "Rut", placeholder: "Rut" },
+    { name: "nombre", label: "Nombre", placeholder: "Nombre" },
+    { name: "apellido", label: "Apellido", placeholder: "Apellido" },
+    { name: "email", label: "Email", placeholder: "Email" },
+  ]);
+  const [editedUserData, setEditedUserData] = useState({ ...user });
+  const [rutError, setRutError] = useState(false);
+
+  useEffect(() => {
+    // Actualiza el estado al recibir un nuevo usuario
+    setEditedUserData({ ...user });
+    setRutError(false); // Reinicia el estado de error de RUT
+  }, [user]);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    let formattedValue = value;
+
+    if (name === "rut") {
+      formattedValue = format(clean(value));
+      setRutError(!validate(clean(value)));
+    }
+
+    setEditedUserData((prevData) => ({
+      ...prevData,
+      [name]: formattedValue,
+    }));
+  };
+
+  const handleClose = () => {
+    setEditedUserData({ ...user }); // Revierte los cambios si se cancela
+    onClose();
+  };
+
+  const handleEditUser = () => {
+    const token = Cookies.get("token");
+    const config = {
+      headers: {
+        Authorization: `Token ${token}`,
+      },
+    };
+
+    if (!rutError) {
+      const updatedUserData = { ...editedUserData };
+
+      axios
+        .put(`http://127.0.0.1:8000/api/edit/${user.id_user}`, updatedUserData, config)
+        .then(() => {
+          toast.success("Usuario actualizado exitosamente");
+          onClose();
+        })
+        .catch((error) => {
+          console.error("Error updating user:", error);
+          toast.error("Error al actualizar usuario");
+        });
+    }
+    
+  };
+
   return (
     <Dialog
-      visible={visible}
-      onHide={onHide}
       header="Editar Usuario"
-      breakpoints={{ "960px": "75vw", "641px": "100vw" }}
-      style={{ width: "50vw" }}
-      modal
-    >
-      {userToEdit && (
-        <div className="">
-          {/* ... (other fields) */}
-          <div className="flex flex-col mb-4">
-            <label htmlFor="rut">Rut</label>
-            <InputText
-              id="rut"
-              value={userToEdit.rut}
-              onChange={(e) => {
-                const updatedUser = { ...userToEdit, rut: e.target.value };
-                onSaveChanges(updatedUser);
-              }}
-            />
-          </div>
-          <div className="flex flex-col mb-4">
-            <label htmlFor="nombre">Nombre</label>
-            <InputText
-              id="nombre"
-              value={userToEdit.nombre}
-              onChange={(e) => {
-                const updatedUser = { ...userToEdit, nombre: e.target.value };
-                onSaveChanges(updatedUser);
-              }}
-            />
-          </div>
-          <div className="flex flex-col mb-4">
-            <label htmlFor="apellido">Apellido</label>
-            <InputText
-              id="apellido"
-              value={userToEdit.apellido}
-              onChange={(e) => {
-                const updatedUser = { ...userToEdit, apellido: e.target.value };
-                onSaveChanges(updatedUser);
-              }}
-            />
-          </div>
-          <div className="flex flex-col mb-4">
-            <label htmlFor="email">Email</label>
-            <InputText
-              id="email"
-              value={userToEdit.email}
-              onChange={(e) => {
-                const updatedUser = { ...userToEdit, email: e.target.value };
-                onSaveChanges(updatedUser);
-              }}
-            />
-          </div>
-          <div className="flex flex-col mb-4">
-            <label htmlFor="curso">Curso</label>
-            <Dropdown
-              id="curso"
-              options={[
-                { label: "3A", value: "3A" },
-                { label: "3B", value: "3B" },
-                { label: "3C", value: "3C" },
-                { label: "4A", value: "4A" },
-                { label: "4B", value: "4B" },
-                { label: "4C", value: "4C" },
-                // Add more options as needed
-              ]}
-              value={userToEdit.curso}
-              onChange={(e) => {
-                const updatedUser = { ...userToEdit, curso: e.value };
-                onSaveChanges(updatedUser);
-              }}
-              placeholder="Select a Curso"
-            />
-          </div>
-          <div className="flex flex-col mb-4">
-            <label htmlFor="carrera">Carrera</label>
-            <InputText
-              id="carrera"
-              value={userToEdit.carrera}
-              onChange={(e) => {
-                const updatedUser = { ...userToEdit, carrera: e.target.value };
-                onSaveChanges(updatedUser);
-              }}
-            />
-          </div>
-          <div className="flex mt-4 w-full gap-2 items-end justify-end ">
-            {/* Botón para cancelar la edición */}
-            <Button
-              label="Cancelar"
-              rounded
-              size="small"
-              severity="danger"
-              onClick={onHide}
-            />
-            {/* Botón para guardar los cambios */}
-            <Button
-              label="Guardar"
-              onClick={onSaveChanges}
-              rounded
-              raised
-              size="small"
-              severity="success"
-            />
-          </div>
+      visible={visible}
+      onHide={handleClose}
+      footer={
+        <div>
+          <Button
+            onClick={handleClose}
+            label="Cancelar"
+            color="danger"
+            size="sm"
+          />
+          <Button onClick={handleEditUser} label="Guardar" size="sm" />
         </div>
-      )}
+      }
+    >
+      <div className="p-fluid">
+        {fields.map((field) => (
+          <div key={field.name} className="flex flex-col mb-2">
+            <label htmlFor={field.name}>{field.label}</label>
+            <input
+              id={field.name}
+              placeholder={field.placeholder}
+              className={`input ${
+                field.name === "rut" && rutError ? "error" : ""
+              }`}
+              name={field.name}
+              value={editedUserData[field.name] || ""}
+              onChange={handleInputChange}
+            />
+            {field.name === "rut" && rutError && (
+              <small className="text-red-500">RUT inválido</small>
+            )}
+          </div>
+        ))}
+      </div>
     </Dialog>
   );
 };

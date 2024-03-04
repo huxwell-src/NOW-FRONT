@@ -4,19 +4,29 @@ import { faPlus } from "@fortawesome/free-solid-svg-icons";
 import Button from "../UI/Button";
 import { Dropdown } from "primereact/dropdown";
 import { validate, clean, format } from "rut.js";
+import axios from "axios";
+import { toast, Toaster } from "react-hot-toast";
 
 const AddUserDialog = () => {
+  const rol = [{ rol: "Alumno" }, { rol: "Profesor" }];
   const [fields] = useState([
     { name: "rut", label: "Rut", placeholder: "Rut" },
     { name: "nombre", label: "Nombre", placeholder: "Nombre" },
     { name: "apellido", label: "Apellido", placeholder: "Apellido" },
     { name: "email", label: "Email", placeholder: "Email" },
   ]);
+  const carrera = [
+    { label: "Sin carrera", value: 1 },
+    { label: "Construcción (edificación)", value: 2 },
+    { label: "Construcciones Metálicas", value: 3 },
+    { label: "Electricidad", value: 4 },
+  ];
   const [userData, setUserData] = useState({});
   const [visible, setVisible] = useState(false);
   const [rutError, setRutError] = useState(false); // Estado para el error de RUT
   const [selectedRol, setSelectedRol] = useState(null);
-  const rol = [{ rol: "Alumno" }, { rol: "Profesor" }];
+  const [selectedCarrera, setSelectedCarrera] = useState(null);
+  
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -44,58 +54,54 @@ const AddUserDialog = () => {
     setUserData({}); // Restablece el estado userData a un objeto vacío al cerrar el diálogo
   };
 
-  // Supongamos que tienes una función llamada `Solicitud()` que crea una nueva solicitud
-// y toma como argumentos el usuario y el objeto de solicitud
-const Solicitud = (usuario, solicitud) => {
-  // Código para crear la solicitud
-  console.log("Solicitud creada:", solicitud);
-};
+  const handleAddUser = () => {
+    // Verifica que todos los campos estén completos y que el RUT sea válido
+    const allFieldsFilled = fields.every((field) => userData[field.name]);
+    if (allFieldsFilled && !rutError) {
+      // Genera la contraseña utilizando la primera letra del apellido en mayúscula y el RUT
+      const apellidoInicialMayuscula = userData.apellido
+        .charAt(0)
+        .toUpperCase();
+      const rutSinGuion = userData.rut.replace("-", "");
+      const password = apellidoInicialMayuscula + rutSinGuion;
 
-const handleAddUser = () => {
-  // Verifica que todos los campos estén completos y que el RUT sea válido
-  const allFieldsFilled = fields.every((field) => userData[field.name]);
-  if (allFieldsFilled && !rutError) {
-    // Genera la contraseña utilizando la primera letra del apellido en mayúscula y el RUT
-    const apellidoInicialMayuscula = userData.apellido.charAt(0).toUpperCase();
-    const rutSinGuion = userData.rut.replace("-", "");
-    const password = apellidoInicialMayuscula + rutSinGuion;
-    
-    // Crea un nuevo objeto JSON con los datos ingresados, incluyendo la contraseña y el array "solicitudes"
-    const newUser = {
-      rut: userData.rut,
-      nombre: userData.nombre,
-      apellido: userData.apellido,
-      email: userData.email,
-      rol: selectedRol.rol, // Asegúrate de que selectedRol no sea null
-      password: password,
-      solicitudes: [] // Array vacío de solicitudes
-    };
-    
-    // Muestra el JSON del nuevo usuario en la consola
-    console.log("JSON de usuario:", newUser);
-    
-    // Llama a la función para agregar el usuario con el nuevo objeto JSON
-    // Supongamos que tienes una función llamada `onUserAdded` que agrega el usuario
-    onUserAdded(newUser);
+      // Crea un nuevo objeto JSON con los datos ingresados, incluyendo la contraseña y el array "solicitudes"
+      const newUser = {
+        rut: userData.rut,
+        nombre: userData.nombre,
+        apellido: userData.apellido,
+        email: userData.email,
+        rol: selectedRol.rol, // Asegúrate de que selectedRol no sea null
+        password: password,
+        solicitudes: [], // Array vacío de solicitudes
+      };
 
-    // También crea una solicitud para el nuevo usuario
-    const nuevaSolicitud = {
-      // Datos de la solicitud, por ejemplo:
-      motivo: "Nuevo usuario registrado",
-      usuario: newUser.rut // Puedes usar el RUT del usuario como referencia en la solicitud
-    };
-    
-    // Llama a la función para crear la solicitud
-    Solicitud(newUser, nuevaSolicitud);
-    
-    // Cierra el diálogo después de agregar el usuario
-    closeDialog();
-  }
-};
+      // Muestra el JSON del nuevo usuario en la consola
+      console.log("JSON de usuario:", newUser);
 
+      // Realiza la solicitud POST al backend usando Axios
+      axios
+        .post(`${import.meta.env.VITE_BACKEND_URL_BASE}/create`, newUser)
+        .then((response) => {
+          console.log("Usuario agregado exitosamente");
+          toast.success("Usuario creado");
+
+          // Llama a fetchUsers para actualizar la lista de usuarios
+          fetchUsers();
+        })
+        .catch((error) => {
+          console.error("Error al agregar el usuario:", error);
+          toast.error("Error al crear usuario");
+        });
+
+      // Cierra el diálogo después de agregar el usuario
+      closeDialog();
+    }
+  };
 
   return (
     <>
+      <Toaster />
       <Button
         label="Agregar"
         className="flex items-center m-2"
@@ -132,7 +138,17 @@ const handleAddUser = () => {
             optionLabel="rol"
             placeholder="Seleccionar rol"
             severity="info"
-            className="w-full ring-gray-300 ring-1 duration-150 rounded-xl border border-gray-200 p-0 hover:border-primary-500 focus:outline-none focus:ring focus:ring-primary-500/70"
+            className="w-full ring-gray-300 ring-1 duration-150 rounded-xl border border-gray-200  hover:border-primary-500 focus:outline-none focus:ring focus:ring-primary-500/70"
+          />
+          <label>Carrera</label>
+          <Dropdown
+            value={selectedCarrera}
+            onChange={(e) => setSelectedCarrera(e.value)}
+            options={carrera}
+            optionLabel="label" // Nombre del campo que se mostrará en la lista desplegable
+            placeholder="Seleccionar Carrera"
+            severity="info"
+            className="w-full ring-gray-300 ring-1 duration-150 rounded-xl border border-gray-200  hover:border-primary-500 focus:outline-none focus:ring focus:ring-primary-500/70"
           />
           <div className="flex w-full justify-end duration-200">
             <Button

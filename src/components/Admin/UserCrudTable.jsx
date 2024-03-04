@@ -6,6 +6,7 @@ import Header from "../UI/Header";
 import Table from "../UI/Table";
 import Button from "../UI/Button";
 import AddUserDialog from "./AddUserDialog";
+import EditUserDialog from "./EditUserDialog";
 import { toast, Toaster } from "react-hot-toast";
 import {
   faFile,
@@ -24,6 +25,8 @@ const UserCrudTable = (props) => {
   const [solicitudesDialogVisible, setSolicitudesDialogVisible] =
     useState(false);
   const [expandedRows, setExpandedRows] = useState([]);
+  const [editDialogVisible, setEditDialogVisible] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
 
   useEffect(() => {
     fetchUsers();
@@ -48,7 +51,7 @@ const UserCrudTable = (props) => {
           );
         }
 
-        setUsers(filteredUsers);
+        setUsers(filteredUsers); // Actualiza el estado de los usuarios
       })
       .catch((error) => {
         console.error("Error fetching users:", error);
@@ -56,11 +59,12 @@ const UserCrudTable = (props) => {
   };
 
   const handleDeleteUser = (id_user) => {
+    setUserToDeleteId(id_user); // Establece userToDeleteId aquí
     setDeleteUserDialogVisible(true);
-    setUserToDeleteId(id_user);
   };
 
-  const handleDeleteUserConfirmed = (id_user) => {
+  const handleDeleteUserConfirmed = () => {
+    // No es necesario pasar id_user como parámetro aquí
     const token = Cookies.get("token");
     const config = {
       headers: {
@@ -69,7 +73,7 @@ const UserCrudTable = (props) => {
     };
 
     axios
-      .delete(`http://127.0.0.1:8000/api/delete/${id_user}`, config)
+      .delete(`http://127.0.0.1:8000/api/delete/${userToDeleteId}`, config) // Utiliza userToDeleteId aquí
       .then(() => {
         fetchUsers();
         setDeleteUserDialogVisible(false);
@@ -129,6 +133,22 @@ const UserCrudTable = (props) => {
     }
   };
 
+  const handleEditUser = (user) => {
+    setSelectedUser(user);
+    setEditDialogVisible(true);
+  };
+
+  const handleEditDialogClose = () => {
+    setEditDialogVisible(false);
+  };
+
+  const handleUserUpdate = (updatedUser) => {
+    // Lógica para actualizar el usuario en la base de datos
+    // Después de la actualización, actualiza la tabla
+    fetchUsers(); // Esta función debería cargar los usuarios actualizados
+    setEditDialogVisible(false); // Cierra el diálogo de edición
+  };
+
   const actions = (rowData) => {
     return (
       <div className="flex">
@@ -144,7 +164,7 @@ const UserCrudTable = (props) => {
           color="text"
           size="sm"
           className=" h-10 w-10 flex items-center justify-center"
-          onClick={() => handleDeleteUser(rowData.id)}
+          onClick={() => handleDeleteUser(rowData.id_user)}
         />
         <Button
           icon={faFolderOpen}
@@ -210,12 +230,12 @@ const UserCrudTable = (props) => {
       />
 
       <div className="m-4">
-        <div className="bg-white border flex-col sm:flex-row border-gray-200 rounded-lg my-2 flex justify-between">
+        <div className="bg-white border rounded-xl  flex-col sm:flex-row border-gray-200 my-2 flex justify-between">
           <input
             id="searchInput"
             type="text"
             placeholder="Buscar alumno..."
-            className="sm:w-[75%] input m-2 "
+            className="sm:w-[75%] input m-4"
             value={globalFilter}
             onChange={handleGlobalFilter}
           />
@@ -230,12 +250,7 @@ const UserCrudTable = (props) => {
             <AddUserDialog />
           </div>
         </div>
-        <Table
-          columns={columns}
-          data={filteredUsers}
-          paginator
-          onRowSelect={(selectedRows) => console.log(selectedRows)}
-        />
+        <Table columns={columns} data={filteredUsers} paginator />
       </div>
       {/* Diálogo para eliminar usuario */}
       <Dialog
@@ -323,6 +338,14 @@ const UserCrudTable = (props) => {
           />
         )}
       </Dialog>
+
+      {/* Diálogo para editar usuario */}
+      <EditUserDialog
+        visible={editDialogVisible}
+        user={selectedUser}
+        onClose={handleEditDialogClose}
+        onUpdateUser={handleUserUpdate}
+      />
     </>
   );
 };

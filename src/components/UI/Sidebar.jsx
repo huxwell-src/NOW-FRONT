@@ -222,7 +222,7 @@ export function SidebarItem() {
 
   let menuData;
   switch (user?.rol) {
-    case "Admin":
+    case "Administador":
       menuData = [
         {
           label: "Inicio",

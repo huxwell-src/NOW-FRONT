@@ -55,14 +55,14 @@ class Login extends Component {
 
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL_BASE}/api/login`,
+        `${import.meta.env.VITE_BACKEND_URL_BASE}/login`,  
         loginData
       );
 
       if (response.data.token) {
         const token = response.data.token;
 
-        const userResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL_BASE}/api/user`, {
+        const userResponse = await axios.get(`${import.meta.env.VITE_BACKEND_URL_BASE}/user`, {
           headers: {
             Authorization: `Token ${token}`,
           },

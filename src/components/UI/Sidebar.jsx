@@ -222,7 +222,7 @@ export function SidebarItem() {
 
   let menuData;
   switch (user?.rol) {
-    case "Administador":
+    case "Administrador":
       menuData = [
         {
           label: "Inicio",
@@ -278,10 +278,9 @@ export function SidebarItem() {
       ];
       break;
     default:
-      // Si el rol no coincide con ninguno de los casos anteriores, puedes proporcionar un conjunto de datos predeterminado o mostrar un mensaje de error.
-      console.error("Rol de usuario no reconocido");
-      menuData = []; // O proporciona un conjunto de datos predeterminado vacío
+      menuData = [];
   }
+  
 
   return (
     <>

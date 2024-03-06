@@ -8,7 +8,14 @@ import {
   faAnglesRight,
 } from "@fortawesome/free-solid-svg-icons";
 
-const Table = ({ columns, data, onRowSelect, paginator = false, height, className }) => {
+const Table = ({
+  columns,
+  data,
+  onRowSelect,
+  paginator = false,
+  height,
+  className,
+}) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(25);
   const [selectedRows, setSelectedRows] = useState([]);
@@ -57,23 +64,26 @@ const Table = ({ columns, data, onRowSelect, paginator = false, height, classNam
   };
   return (
     <div
-      className={`overflow-x-auto border border-slate-200 rounded-xl  ${className}   ` }
-      style={{ height: height || "auto" } }
+      className={`overflow-x-auto border border-slate-200 rounded-xl  ${className}   `}
+      style={{ height: height || "auto" }}
     >
       <div className="relative" ref={tableRef} onScroll={handleScroll}>
-        <table className={`min-w-full bg-white` }>
+        <table className={`min-w-full bg-white`}>
           <thead>
-            {columns.map((column, columnIndex) => (
-              <th
-                key={columnIndex}
-                className={`font-semibold text-lg tracking-wider table-cell align-middle text-left py-4 px-4 text-slate-900 border-b border-slate-200 sticky top-0 bg-white ${
-                  column.center ? "text-center" : "" 
-                }`}
-              >
-                {column.name}
-              </th>
-            ))}
+            <tr>
+              {columns.map((column, columnIndex) => (
+                <th
+                  key={columnIndex}
+                  className={`font-semibold text-lg tracking-wider table-cell align-middle text-left py-4 px-4 text-slate-900 border-b border-slate-200 sticky top-0 bg-white ${
+                    column.center ? "text-center" : ""
+                  }`}
+                >
+                  {column.name}
+                </th>
+              ))}
+            </tr>
           </thead>
+
           <tbody>
             {currentItems.map((row, rowIndex) => {
               const rowKey = `${row.id_producto}-${rowIndex}`;

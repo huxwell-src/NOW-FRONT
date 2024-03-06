@@ -39,52 +39,42 @@ const ProductTable = () => {
   useEffect(() => {
     const fetchData = async () => {
       const token = Cookies.get("token");
-  
       if (token) {
         try {
           // Obtener productos
           const productsResponse = await axios.get(
-            `${import.meta.env.VITE_BACKEND_URL_BASE}/api/productos`,
+            `${import.meta.env.VITE_BACKEND_URL_BASE}/productos`,
             {
               headers: {
                 Authorization: `Token ${token}`,
               },
             }
           );
-  
           setProducts(productsResponse.data);
-  
           // Obtener datos del usuario
           const userData = await getUserData(token);
-          const userCarrera = userData.carrera.map((carrera) => carrera.id);
-  
           // Filtrar profesores
           const filteredProfessors = initialProfessors.filter((profesor) =>
-            profesor.carrera.some((c) => userCarrera.includes(c))
+            profesor.carrera.some((c) => userData.carrera.map((carrera) => carrera.id).includes(c))
           );
-  
           setInitialProfessors(filteredProfessors);
-  
-          // Obtener datos de alumnos (reemplaza 'api/alumnos' con la ruta correcta)
+          // Obtener datos de alumnos
           const alumnosResponse = await axios.get(
-            `${import.meta.env.VITE_BACKEND_URL_BASE}/api/create`,
+            `${import.meta.env.VITE_BACKEND_URL_BASE}/create`,
             {
               headers: {
                 Authorization: `Token ${token}`,
               },
             }
           );
-  
           setAlumnos(alumnosResponse.data);
         } catch (error) {
-          console.error("Error al obtener datos de productos, profesores o alumnos:", error);
+          console.error("Error al obtener datos:", error);
         }
       }
     };
-  
     fetchData();
-  }, [initialProfessors]);
-  
+  }, []);
   
   const addToCart = (product) => {
     const updatedCart = [...cart];
@@ -138,7 +128,7 @@ const ProductTable = () => {
 
         for (const item of cart) {
           const productDetails = await axios.get(
-            `${import.meta.env.VITE_BACKEND_URL_BASE}/api/productos/${
+            `${import.meta.env.VITE_BACKEND_URL_BASE}/productos/${
               item.id_producto
             }`,
             {
@@ -192,7 +182,7 @@ const ProductTable = () => {
         toast.success("Solicitud Enviada");
 
         const response = await axios.post(
-          `${import.meta.env.VITE_BACKEND_URL_BASE}/api/solicitudes`,
+          `${import.meta.env.VITE_BACKEND_URL_BASE}/solicitudes`,
           solicitud,
           {
             headers: {
@@ -204,7 +194,7 @@ const ProductTable = () => {
 
         for (const product of productosDuplicados) {
           const productDetails = await axios.get(
-            `${import.meta.env.VITE_BACKEND_URL_BASE}/api/productos/${
+            `${import.meta.env.VITE_BACKEND_URL_BASE}/productos/${
               product.id_producto
             }`,
             {
@@ -218,7 +208,7 @@ const ProductTable = () => {
             productDetails.data.disponibilidad - product.cantidad;
 
           await axios.put(
-            `${import.meta.env.VITE_BACKEND_URL_BASE}/api/productos/${
+            `${import.meta.env.VITE_BACKEND_URL_BASE}productos${
               product.id_producto
             }`,
             {
@@ -235,7 +225,7 @@ const ProductTable = () => {
         }
 
         const responseProducts = await axios.get(
-          `${import.meta.env.VITE_BACKEND_URL_BASE}/api/productos`,
+          `${import.meta.env.VITE_BACKEND_URL_BASE}/productos`,
           {
             headers: {
               Authorization: `Token ${token}`,

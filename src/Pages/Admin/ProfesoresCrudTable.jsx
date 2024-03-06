@@ -7,27 +7,8 @@ import Header from '../../components/Header'
 // Declaración de la clase del componente
 class TableProfesores extends Component {
     render() {
- 
-        // Datos de la ruta para la navegación
-        const routeData = [
-            {
-                "id": 1,
-                "name": "Gestion de usuarios"
-            },
-            {
-                "id": 2,
-                "name": "Profesores",
-                "hidden": true
-            }
-        ];
-
-        // Renderizado del componente
         return (
             <>
-                {/* Componente de encabezado con título y datos de la ruta */}
-                <Header title="Gestion de profesores"  route={routeData} />
-
-                {/* Componente de tabla de usuarios con rol "Alumno" */}
                 <UserCrudTable userRole="Profesor" manyCarreras={false} />
             </>
         )
